@@ -1,0 +1,23 @@
+.resultContainer {
+  width: 95%;
+  height: 650px;
+  margin: 0 auto;
+  border: 1px solid #ccc;
+}
+.stepsContainer {
+  margin-top: 1rem;
+}
+
+.step-wrapper {
+  width: 100%;
+  height: 650px;
+  margin: 0 auto;
+  border: 1px solid #ccc;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+}
+
+  .step-wrapper h3 {
+    margin-top: 0;
+  }

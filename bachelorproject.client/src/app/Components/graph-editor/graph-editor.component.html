@@ -1,0 +1,40 @@
+<div class="main">
+  <div class="toolbar">
+    <div class="samples">
+      <div #sampleNode class="sample-node" draggable="true">Create Node</div>
+      <div #sampleEdge class="sample-edge">Create Edge</div>
+    </div>
+    <div class="checkbox-container">
+      <input type="checkbox"
+             [checked]="directed"
+             (change)="toggleDirectional()"
+             id="directionalCheckbox" />
+      <label for="directionalCheckbox">Directional?</label>
+    </div>
+  </div>
+
+  <div #graphContainer class="graph-container" (dragover)="onDragOver($event)" (drop)="onDrop($event)"></div>
+</div>
+
+<div #nodeContextMenu class="context-menu">
+  <button (click)="setStartNode()">Set as Start Node</button>
+  <button (click)="setEndNode()">Set as End Node</button>
+  <button (click)="renameNode()">Rename Node</button>
+  <button (click)="deleteSelected()">Delete Node</button>
+</div>
+
+<div #edgeContextMenu class="context-menu">
+  <button (click)="promptEdgeWeight()">Add/Update Weight</button>
+  <button (click)="deleteSelected()">Delete Edge(s)</button>
+</div>
+
+<app-graph-selection (lastClickedElementChange)="lastClickedElement = $event"
+                     [graph]="graph"
+                     [paper]="paper"></app-graph-selection>
+
+<app-edge-weight></app-edge-weight>
+<app-edges-connection [graph]="graph"
+                      [paper]="paper"
+                      [directed]="directed"></app-edges-connection>
+
+<app-navbar [graph]="graph" [graphSrc]="startNode" [graphTarget]="endNode" [directed]="directed"></app-navbar>

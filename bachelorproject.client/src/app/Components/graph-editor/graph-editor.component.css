@@ -1,0 +1,94 @@
+.main {
+  width: 95%;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+.graph-container {
+  width: 100%;
+  border: 1px solid #ccc;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+.samples {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.sample-node {
+  width: 80px;
+  height: 80px;
+  background: #3498db;
+  color: white;
+  text-align: center;
+  cursor: grab;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.3s;
+}
+  .sample-node:hover {
+    background: #2980b9;
+  }
+.sample-edge {
+  width: 100px;
+  height: 40px;
+  background: #3498db;
+  color: white;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.3s;
+}
+
+button { padding: 5px 10px; cursor: pointer; }
+.context-menu {
+  position: fixed;
+  display: none;
+  background: white;
+  border: 1px solid #ccc;
+  padding: 5px;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+  z-index: 10;
+}
+.context-menu button {
+  display: block;
+  width: 100%;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 5px;
+  text-align: left;
+}
+.context-menu button:hover {
+  background: #eee;
+}
+.checkbox-container {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 1.1rem;
+  margin: 0.5rem;
+}
+
+  .checkbox-container input[type="checkbox"] {
+    transform: scale(1.5);
+    margin-right: 0.5rem;
+  }
+
+  .checkbox-container label {
+    font-weight: 500;
+    color: #333;
+  }

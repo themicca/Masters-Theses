@@ -3,15 +3,11 @@
     public class GraphDto
     {
         public Guid Id { get; set; }
-
-        public string GraphName { get; set; }
-
-        public string[] GraphNodes { get; set; }
-
-        public int[][] GraphEdges { get; set; }
-
-        public string GraphSrc { get; set; }
-
-        public string GraphTarget { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public List<NodeDto> Nodes { get; set; } = new();
+        public List<EdgeDto> Edges { get; set; } = new();
+        public Guid? Src { get; set; }
+        public Guid? Target { get; set; }
+        public bool IsDirected { get; set; }
     }
 }

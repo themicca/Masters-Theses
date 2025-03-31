@@ -5,7 +5,7 @@ namespace BachelorProject.Server.GraphAlgorithms.EdgeColoring
 {
     public class GreedyColoringAlgo
     {
-        public static GraphStepDto SolveGraph(CreateGraphRequestDto graph)
+        public static GraphStepDto SolveGraph(GraphDto graph)
         {
             string[] nodes = graph.GraphNodes;
             int n = nodes.Length;

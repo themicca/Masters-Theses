@@ -1,9 +1,12 @@
+import { GraphEdge } from "./graph-edge.model";
+import { GraphNode } from "./graph-node.model";
+
 export interface GraphRequest {
-  graphName: string;
-  graphNodes: string[];
-  graphEdges: number[][];
-  graphSrc: string | null;
-  graphTarget: string | null;
-  graphDirected: boolean;
-  graphNodePositions: { x: number; y: number }[];
+  id: string;
+  name: string;
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  src: string | null;
+  target: string | null;
+  isDirected: boolean;
 }

@@ -3,6 +3,7 @@ import * as joint from 'jointjs';
 import { GraphSelectionComponent } from '../graph-selection/graph-selection.component';
 import { EdgeWeightComponent } from '../edge-weight/edge-weight.component';
 import { EdgesConnectionComponent } from '../edges-connection/edges-connection.component';
+import { v4 as uuidv4 } from 'uuid';
 
 @Component({
   selector: 'app-graph-editor',
@@ -375,6 +376,7 @@ export class GraphEditorComponent implements AfterViewInit {
 
   private addNode(x: number, y: number, label: string): void {
     const circle = new joint.shapes.standard.Circle();
+    circle.id = uuidv4();
     circle.position(x - this.nodeRadius / 2, y - this.nodeRadius / 2);
     circle.resize(this.nodeRadius, this.nodeRadius);
     circle.attr({

@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { GraphRequest } from '../models/graph-request.model';
 import { Observable, throwError } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { GraphNode } from '../models/graph-node.model';
+import { GraphEdge } from '../models/graph-edge.model';
 
 @Injectable({
   providedIn: 'root'
@@ -10,8 +12,8 @@ export class GraphService {
   private graph!: joint.dia.Graph;
   private src: string | null = null;
   private target: string | null = null;
-  private nodes!: string[];
-  private edges!: number[][];
+  private nodes!: GraphNode[];
+  private edges!: GraphEdge[];
   private directed!: boolean;
   
   errors: string[] = [];
@@ -58,7 +60,7 @@ export class GraphService {
   }
 
   runFleury(model: GraphRequest): Observable<void> {
-    model.graphSrc = this.src;
+    model.src = this.src;
     return this.http.post<void>('https://localhost:7130/api/Fleury', model)
   }
 
@@ -74,14 +76,14 @@ export class GraphService {
     return this.http.post<void>('https://localhost:7130/api/WelshPowell', model)
   }
 
-  validate(algo: string, graph: joint.dia.Graph, graphModel: GraphRequest): string[]
+  validate(algo: string, graph: joint.dia.Graph, model: GraphRequest): string[]
   {
-    this.src = graphModel.graphSrc;
+    this.src = model.src;
     this.graph = graph;
-    this.target = graphModel.graphTarget;
-    this.nodes = graphModel.graphNodes;
-    this.edges = graphModel.graphEdges;
-    this.directed = graphModel.graphDirected;
+    this.target = model.target;
+    this.nodes = model.nodes;
+    this.edges = model.edges;
+    this.directed = model.isDirected;
 
     this.errors = [];
 
@@ -169,87 +171,50 @@ export class GraphService {
   }
 
   validateFleury() {
-    // Eulerian condition check
-    let nodesCount = this.graph.getElements().length;
-
     if (!this.directed) {
       let oddCount = 0;
-      for (let i = 0; i < nodesCount; i++) {
-        let degree = 0;
-        for (let j = 0; j < nodesCount; j++) {
-          if (this.edges[i][j] !== 0) {
-            degree++;
-          }
-        }
+      for (const node of this.nodes) {
+        const degree = this.edges.filter(e => e.source === node.id || e.target === node.id).length;
         if (degree % 2 !== 0) {
           oddCount++;
-          this.src = this.nodes[i]
         }
       }
       if (oddCount !== 0 && oddCount !== 2) {
         this.errors.push('Graph is not Eulerian.');
         this.errors.push(`It has ${oddCount} vertices with an odd degree.`)
         this.errors.push('Expected 0 for an Eulerian circuit or 2 for an Eulerian path in an undirected graph.')
-        return;
-      }
-      if (oddCount === 0) {
-        for (let i = 0; i < nodesCount; i++) {
-          let degree = 0;
-          for (let j = 0; j < nodesCount; j++) {
-            if (this.edges[i][j] !== 0) {
-              degree++;
-            }
-          }
-          if (degree > 0) {
-            this.src = this.nodes[i];
-            break;
-          }
-        }
       }
     } else {
-      const inDegree: number[] = new Array(nodesCount).fill(0);
-      const outDegree: number[] = new Array(nodesCount).fill(0);
-
-      for (let i = 0; i < nodesCount; i++) {
-        for (let j = 0; j < nodesCount; j++) {
-          if (this.edges[i][j] !== 0) {
-            outDegree[i]++;
-            inDegree[j]++;
-          }
-        }
+      const inDegreeMap = new Map<string, number>();
+      const outDegreeMap = new Map<string, number>();
+      for (const node of this.nodes) {
+        inDegreeMap.set(node.id, 0);
+        outDegreeMap.set(node.id, 0);
       }
-
+      for (const edge of this.edges) {
+        outDegreeMap.set(edge.source, (outDegreeMap.get(edge.source) || 0) + 1);
+        inDegreeMap.set(edge.target, (inDegreeMap.get(edge.target) || 0) + 1);
+      }
       let startNodes = 0;
       let endNodes = 0;
-
-      for (let i = 0; i < nodesCount; i++) {
-        if (outDegree[i] - inDegree[i] === 1) {
+      for (const node of this.nodes) {
+        const outDegree = outDegreeMap.get(node.id) || 0;
+        const inDegree = inDegreeMap.get(node.id) || 0;
+        if (outDegree - inDegree === 1) {
           startNodes++;
-          this.src = this.nodes[i];
-        } else if (inDegree[i] - outDegree[i] === 1) {
+        } else if (inDegree - outDegree === 1) {
           endNodes++;
-        } else if (inDegree[i] !== outDegree[i]) {
+        } else if (inDegree !== outDegree) {
           this.errors.push('Graph is not Eulerian.');
-          this.errors.push(`Vertex ${this.nodes[i]} has in-degree ${inDegree[i]} and out-degree ${outDegree[i]}.`)
+          this.errors.push(`Vertex ${node.label} has in-degree ${inDegree} and out-degree ${outDegree}.`)
           this.errors.push('That is not allowed in directed graphs.')
           return;
         }
       }
-
       if (!((startNodes === 1 && endNodes === 1) || (startNodes === 0 && endNodes === 0))) {
         this.errors.push('Graph is not Eulerian.');
         this.errors.push('Expected exactly 1 vertex with out-degree one greater than in-degree and 1 with in-degree one greater than out-degree for an Eulerian path or all vertices balanced for an Eulerian circuit.')
         this.errors.push(`but found ${startNodes} start node(s) and ${endNodes} end node(s).`)
-        return;
-      }
-      
-      if (startNodes === 0) {
-        for (let i = 0; i < nodesCount; i++) {
-          if (outDegree[i] > 0) {
-            this.src = this.nodes[i];
-            break;
-          }
-        }
       }
     }
   }

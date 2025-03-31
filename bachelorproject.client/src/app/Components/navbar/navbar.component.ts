@@ -3,6 +3,9 @@ import { GraphRequest } from '../../models/graph-request.model';
 import { GraphService } from '../../services/graph.service';
 import { Subscription } from 'rxjs';
 import { GraphResponseDataService } from '../../services/graph.response.data.service';
+import { v4 as uuidv4 } from 'uuid';
+import { GraphNode } from '../../models/graph-node.model';
+import { GraphEdge } from '../../models/graph-edge.model';
 
 @Component({
   selector: 'app-navbar',
@@ -21,54 +24,46 @@ export class NavbarComponent implements OnDestroy {
 
   private addGraphSubscription?: Subscription
   private graphModel: GraphRequest = {
-    graphName: "",
-    graphNodes: [],
-    graphEdges: [],
-    graphSrc: "",
-    graphTarget: "",
-    graphDirected: false,
-    graphNodePositions: []
+    id: uuidv4(),
+    name: "",
+    nodes: [],
+    edges: [],
+    src: null,
+    target: null,
+    isDirected: false
   }
-
+  
   constructor(private graphService: GraphService, private graphResponseDataSerivce: GraphResponseDataService) { }
 
   private extractGraphData(graphModel: GraphRequest): GraphRequest {
-    const nodes = this.graph.getElements().map(node =>
-      node.attr('label/text') || `Node-${node.id}`
-    );
-    const nodeIds = this.graph.getElements().map(node => node.id);
-    const nodeIndexMap = new Map(nodeIds.map((id, index) => [id, index]));
-    
-    const matrixSize = nodes.length;
-    const edges: number[][] = Array.from({ length: matrixSize }, () => Array(matrixSize).fill(0));
-    
-    this.graph.getLinks().forEach(link => {
-      const sourceId = link.getSourceElement()?.id;
-      const targetId = link.getTargetElement()?.id;
-      if (sourceId && targetId) {
-        const sourceIndex = nodeIndexMap.get(sourceId)!;
-        const targetIndex = nodeIndexMap.get(targetId)!;
-        
-        const weight = link.attr('weight') || 1;
-        edges[sourceIndex][targetIndex] = weight;
+    const elements = this.graph.getElements();
+    const nodes: GraphNode[] = elements.map((node: joint.dia.Element) => ({
+      id: node.id.toString(),
+      label: node.attr('label/text') || `Node-${node.id}`,
+      x: node.position().x,
+      y: node.position().y,
+      isStart: node.attr('label/text')?.startsWith('(S) '),
+      isEnd: node.attr('label/text')?.startsWith('(X) ')
+    }));
 
-        if (!this.directed) {
-          edges[targetIndex][sourceIndex] = weight;
-        }
-      }
+    const links = this.graph.getLinks();
+    const edges: GraphEdge[] = links.map((link: joint.dia.Link) => {
+      const sourceElement = link.getSourceElement();
+      const targetElement = link.getTargetElement();
+      return {
+        id: link.id.toString(),
+        source: sourceElement ? sourceElement.id.toString() : '',
+        target: targetElement ? targetElement.id.toString() : '',
+        weight: link.attr('weight') || 1
+      };
     });
 
-    const nodePositions = this.graph.getElements().map(node => {
-      return node.position();
-    });
-
-    graphModel.graphName = "";
-    graphModel.graphSrc = this.graphSrc ? this.graphSrc.attr('label/text') : null;
-    graphModel.graphTarget = this.graphTarget ? this.graphTarget.attr('label/text') : null;
-    graphModel.graphNodes = nodes;
-    graphModel.graphEdges = edges;
-    graphModel.graphDirected = this.directed;
-    graphModel.graphNodePositions = nodePositions;
+    graphModel.name = "";
+    graphModel.src = this.graphSrc ? this.graphSrc.id.toString() : null;
+    graphModel.target = this.graphTarget ? this.graphTarget.id.toString() : null;
+    graphModel.nodes = nodes;
+    graphModel.edges = edges;
+    graphModel.isDirected = this.directed;
 
     return graphModel;
   }

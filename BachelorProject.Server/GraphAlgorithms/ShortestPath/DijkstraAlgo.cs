@@ -22,7 +22,7 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
             return min_index;
         }
 
-        public static GraphStepDto SolveGraph(CreateGraphRequestDto graph)
+        public static GraphStepDto SolveGraph(GraphDto graph)
         {
             string[] nodes = graph.GraphNodes;
             int[][] edges = graph.GraphEdges;

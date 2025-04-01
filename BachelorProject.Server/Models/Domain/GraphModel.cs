@@ -1,9 +1,8 @@
-﻿namespace BachelorProject.Server.Models.Domain
+﻿using BachelorProject.Server.Models.DTO;
+
+namespace BachelorProject.Server.Models.Domain
 {
     public class GraphModel
     {
-        public Guid Id { get; set; }
-
-        public string Graph { get; set; }
     }
 }

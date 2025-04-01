@@ -117,7 +117,7 @@ namespace BachelorProject.Server.GraphAlgorithms.MinimumTree
             GraphStepDto stepDto = new GraphStepDto
             {
                 Steps = steps,
-                FinalGraph = finalGraph
+                ResultGraph = finalGraph
             };
 
             return stepDto;

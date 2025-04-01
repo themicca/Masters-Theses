@@ -157,7 +157,7 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
             GraphStepDto stepDto = new GraphStepDto
             {
                 Steps = steps,
-                FinalGraph = finalGraph
+                ResultGraph = finalGraph
             };
 
             return stepDto;

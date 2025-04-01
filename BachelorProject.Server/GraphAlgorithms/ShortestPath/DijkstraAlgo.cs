@@ -1,5 +1,6 @@
 ﻿using Azure.Core;
 using BachelorProject.Server.Helpers;
+using BachelorProject.Server.Models.Domain;
 using BachelorProject.Server.Models.DTO;
 
 namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
@@ -22,16 +23,11 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
             return min_index;
         }
 
-        public static GraphStepDto SolveGraph(GraphDto graph)
+        public static GraphStepDto SolveGraph(string[] nodeIds, int[][] edges, string src, string target, Snapshots snapshot)
         {
-            string[] nodes = graph.GraphNodes;
-            int[][] edges = graph.GraphEdges;
-            string src = graph.GraphSrc;
-            string target = graph.GraphTarget;
-
-            nodesCount = nodes.Length;
-            int srcIndex = Array.IndexOf(nodes, src);
-            int targetIndex = Array.IndexOf(nodes, target);
+            nodesCount = nodeIds.Length;
+            int srcIndex = Array.IndexOf(nodeIds, src);
+            int targetIndex = Array.IndexOf(nodeIds, target);
 
             if (srcIndex == -1 || targetIndex == -1)
                 throw new ArgumentException("Source or target node not found in the node list.");
@@ -48,8 +44,6 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
             }
 
             dist[srcIndex] = 0;
-
-            var snapshot = new Snapshots(graph);
 
             for (int count = 0; count < nodesCount; count++)
             {
@@ -82,7 +76,7 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
             List<string> path = new List<string>();
             for (int at = targetIndex; at != -1; at = previous[at])
             {
-                path.Add(nodes[at]);
+                path.Add(nodeIds[at]);
             }
 
             path.Reverse();
@@ -93,49 +87,37 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
             }
 
             string[] pathNodes = path.ToArray();
-            int idx;
-            int[][] pathEdges = new int[path.Count][];
-            for (int i = 0; i < path.Count; i++)
+
+            List<string> resultEdgeIds = new List<string>();
+            for (int i = 0; i < pathNodes.Length - 1; i++)
             {
-                pathEdges[i] = new int[path.Count];
-            }
+                string fromId = pathNodes[i];
+                string toId = pathNodes[i + 1];
+                // Retrieve the edge id using the snapshot's lookup method
+                string? edgeId = snapshot.GetEdgeId(fromId, toId);
+                resultEdgeIds.Add(edgeId ?? Guid.NewGuid().ToString());
 
-            for (int i = 0; i < path.Count - 1; i++)
-            {
-                int fromIndex = Array.IndexOf(nodes, path[i]);
-                int toIndex = Array.IndexOf(nodes, path[i + 1]);
-                pathEdges[i][i+1] = edges[fromIndex][toIndex];
-
-                idx = Array.IndexOf(nodes, path[i]);
-                snapshot.ColorNode(idx, Constants.ColorResult);
-                string key = $"{fromIndex}->{toIndex}";
-
-                if (!graph.GraphDirected)
-                {
-                    pathEdges[i + 1][i] = edges[toIndex][fromIndex];
-
-                    string key2 = $"{toIndex}->{fromIndex}";
-                }
+                // Update snapshot for visualization (using original indices)
+                int fromIndex = Array.IndexOf(nodeIds, fromId);
+                int toIndex = Array.IndexOf(nodeIds, toId);
                 snapshot.ColorEdge(fromIndex, toIndex, Constants.ColorResult);
+                snapshot.ColorNode(fromIndex, Constants.ColorResult);
             }
-            idx = Array.IndexOf(nodes, path[path.Count - 1]);
-            snapshot.ColorNode(idx, Constants.ColorResult);
+            int lastIndex = Array.IndexOf(nodeIds, pathNodes[pathNodes.Length - 1]);
+            snapshot.ColorNode(lastIndex, Constants.ColorResult);
 
-            string pathSource = pathNodes[0];
-            string pathTarget = pathNodes[pathNodes.Length - 1];
-
-            CreateGraphRequestDto createGraphRequestDto = new CreateGraphRequestDto{
-                GraphNodes = pathNodes,
-                GraphEdges = pathEdges,
-                GraphSrc = pathSource,
-                GraphTarget = pathTarget,
-                GraphDirected = graph.GraphDirected,
-                GraphNodePositions = graph.GraphNodePositions
+            // Create the ResultGraphDto with just the node and edge ids
+            ResultGraphDto resultGraph = new ResultGraphDto
+            {
+                nodeIds = pathNodes,
+                edgeIds = resultEdgeIds.ToArray()
             };
 
-            GraphStepDto stepDto = new GraphStepDto{
+            // Return the step DTO with the snapshot steps and the result graph.
+            GraphStepDto stepDto = new GraphStepDto
+            {
                 Steps = snapshot.Steps,
-                FinalGraph = createGraphRequestDto
+                ResultGraph = resultGraph
             };
 
             return stepDto;

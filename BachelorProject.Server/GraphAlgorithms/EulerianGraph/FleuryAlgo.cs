@@ -133,7 +133,7 @@ namespace BachelorProject.Server.GraphAlgorithms.EulerianGraph
             GraphStepDto stepDto = new GraphStepDto
             {
                 Steps = steps,
-                FinalGraph = finalGraph
+                ResultGraph = finalGraph
             };
 
             return stepDto;

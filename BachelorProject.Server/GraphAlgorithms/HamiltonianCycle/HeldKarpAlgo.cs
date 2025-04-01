@@ -168,7 +168,7 @@ namespace BachelorProject.Server.GraphAlgorithms.HamiltonianCycle
             GraphStepDto result = new GraphStepDto
             {
                 Steps = steps,
-                FinalGraph = finalGraph
+                ResultGraph = finalGraph
             };
 
             return result;

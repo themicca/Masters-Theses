@@ -1,16 +1,11 @@
-import { GraphRequest } from "./graph-request.model";
-
-export interface EdgeState {
-  edge: string;
-  color: string;
-}
+import { GraphResult } from "./graph-result.model";
 
 export interface StepState {
   nodeColors: { [nodeId: string]: string }; // e.g., { A: 'orange', B: 'green' }
-  edges: EdgeState[];
+  edgeColors: { [edgeId: string]: string };
 }
 
 export interface GraghStepsResult {
   steps: StepState[];
-  finalGraph: GraphRequest;
+  finalGraph: GraphResult;
 }

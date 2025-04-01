@@ -110,7 +110,7 @@ namespace BachelorProject.Server.GraphAlgorithms.MaxMatching
             GraphStepDto resultDto = new GraphStepDto
             {
                 Steps = steps,
-                FinalGraph = finalGraph
+                ResultGraph = finalGraph
             };
 
             return resultDto;

@@ -6,6 +6,7 @@ import { GraphResponseDataService } from '../../services/graph.response.data.ser
 import { v4 as uuidv4 } from 'uuid';
 import { GraphNode } from '../../models/graph-node.model';
 import { GraphEdge } from '../../models/graph-edge.model';
+import { GraghStepsResult } from '../../models/graph-steps-result.model';
 
 @Component({
   selector: 'app-navbar',
@@ -79,9 +80,9 @@ export class NavbarComponent implements OnDestroy {
     }
 
     this.addGraphSubscription = this.graphService.runAlgo(algo, graphData).subscribe({
-      next: (response: any) => {
+      next: (response: GraghStepsResult) => {
         console.log('Received Processed Graph:', response);
-        this.graphResponseDataSerivce.updateGraphData(response);
+        this.graphResponseDataSerivce.updateGraphData(response, graphData);
       },
       error: (error) => {
         console.error('Error sending graph data:', error);

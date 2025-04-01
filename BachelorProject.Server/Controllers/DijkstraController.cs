@@ -1,4 +1,5 @@
 ﻿using BachelorProject.Server.GraphAlgorithms.ShortestPath;
+using BachelorProject.Server.Helpers;
 using BachelorProject.Server.Models.Domain;
 using BachelorProject.Server.Models.DTO;
 using Microsoft.AspNetCore.Mvc;
@@ -15,7 +16,10 @@ namespace BachelorProject.Server.Controllers
         {
             try
             {
-                GraphStepDto result = DijkstraAlgo.SolveGraph(request);
+                string[] nodeIds = GraphDtoConvertor.ToNodeIdArray(request);
+                int[][] matrix = GraphDtoConvertor.ToAdjacencyMatrix(request);
+                Snapshots snapshot = new(request.Nodes.ToArray(), request.Edges.ToArray());
+                GraphStepDto result = DijkstraAlgo.SolveGraph(nodeIds, matrix, request.Src.ToString()!, request.Target.ToString()!, snapshot);
                 return Ok(result);
             }
             catch (Exception ex)

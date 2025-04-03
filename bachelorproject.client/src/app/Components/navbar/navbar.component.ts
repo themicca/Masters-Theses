@@ -53,12 +53,12 @@ export class NavbarComponent implements OnDestroy {
       const targetElement = link.getTargetElement();
       return {
         id: link.id.toString(),
-        source: sourceElement ? sourceElement.id.toString() : '',
-        target: targetElement ? targetElement.id.toString() : '',
+        sourceNodeId: sourceElement ? sourceElement.id.toString() : '',
+        targetNodeId: targetElement ? targetElement.id.toString() : '',
         weight: link.attr('weight') || 1
       };
     });
-
+    
     graphModel.name = "";
     graphModel.src = this.graphSrc ? this.graphSrc.id.toString() : null;
     graphModel.target = this.graphTarget ? this.graphTarget.id.toString() : null;

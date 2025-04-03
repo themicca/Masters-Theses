@@ -1,6 +1,6 @@
 export interface GraphEdge {
   id: string;
-  source: string;
-  target: string;
+  sourceNodeId: string;
+  targetNodeId: string;
   weight: number;
 }

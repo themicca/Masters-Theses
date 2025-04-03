@@ -1,106 +1,99 @@
-﻿using BachelorProject.Server.Helpers;
+﻿using BachelorProject.Server.GraphAlgorithms.ShortestPath;
+using BachelorProject.Server.Helpers;
 using BachelorProject.Server.Models.DTO;
 
 namespace BachelorProject.Server.GraphAlgorithms.HamiltonianCycle
 {
     public class HeldKarpAlgo
     {
-        public static GraphStepDto SolveGraph(CreateGraphRequestDto graph)
+        public static GraphStepDto SolveGraph(GraphDto graph)
         {
-            // Extract graph data from DTO
-            string[] nodes = graph.GraphNodes;
-            int[][] edges = graph.GraphEdges;
-            string src = graph.GraphSrc;
-
+            string[] nodes = GraphDtoConvertor.ToNodeIdArray(graph);
             int n = nodes.Length;
+            int[][] matrix = GraphDtoConvertor.ToAdjacencyMatrix(graph);
+
+            if (graph.Src == null)
+                throw new ArgumentException("Source node not provided.");
+            string src = graph.Src.ToString();
             int start = Array.IndexOf(nodes, src);
             if (start == -1)
                 throw new ArgumentException("Source node not found in the node list.");
 
-            // Number of possible subsets (bitmask representation)
-            int numSubsets = 1 << n;
-            // dp[mask, i]: minimum cost to reach node 'i' having visited the set 'mask'
-            int[,] dp = new int[numSubsets, n];
-            // parent[mask, i]: used for path reconstruction
-            int[,] parent = new int[numSubsets, n];
+            List<StepState> globalSteps = new List<StepState>();
 
-            // Initialize DP and parent arrays
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    if (i == j) continue;
+                    if (matrix[i][j] == 0)
+                    {
+                        GraphDto tempGraph = CloneGraphWithNewEndpoints(graph, nodes[i], nodes[j]);
+                        GraphStepDto dijkstraResult = DijkstraAlgo.SolveGraph(tempGraph);
+
+                        globalSteps.AddRange(dijkstraResult.Steps);
+
+                        int weight = (int) dijkstraResult.ResultGraph.TotalWeight!;
+                        matrix[i][j] = weight;
+                    }
+                }
+            }
+
+            int numSubsets = 1 << n;
+            int[,] dp = new int[numSubsets, n];
+            int[,] parent = new int[numSubsets, n];
             for (int mask = 0; mask < numSubsets; mask++)
             {
                 for (int i = 0; i < n; i++)
                 {
-                    dp[mask, i] = int.MaxValue / 2; // avoid potential overflow
+                    dp[mask, i] = int.MaxValue / 2;
                     parent[mask, i] = -1;
                 }
             }
             dp[1 << start, start] = 0;
 
-            // Prepare visualization state: steps, node and edge colors
-            var steps = new List<StepState>();
-            var nodeColors = new string[n];
-            for (int i = 0; i < n; i++)
-                nodeColors[i] = Constants.ColorBase;
+            Snapshots snapshot = new Snapshots(graph.Nodes.ToArray(), graph.Edges.ToArray());
+            snapshot.InitializeFromAdjacencyMatrix(matrix);
 
-            var edgeColors = new Dictionary<string, string>();
-            for (int i = 0; i < n; i++)
-            {
-                for (int j = 0; j < n; j++)
-                {
-                    if (i != j && edges[i][j] != 0 && edges[i][j] < Constants.MaxWeight)
-                    {
-                        string key = $"{i}->{j}";
-                        edgeColors[key] = Constants.ColorBase;
-                    }
-                }
-            }
-
-            // Dynamic Programming: iterate over every subset (mask) that contains the start node
             for (int mask = 0; mask < numSubsets; mask++)
             {
-                if ((mask & 1 << start) == 0) continue; // ensure start is included
-
+                if ((mask & (1 << start)) == 0) continue;
                 for (int u = 0; u < n; u++)
                 {
-                    // Skip if u is not in the current subset
-                    if ((mask & 1 << u) == 0) continue;
-                    // Try to extend the tour by visiting an unvisited vertex v
+                    if ((mask & (1 << u)) == 0) continue;
                     for (int v = 0; v < n; v++)
                     {
-                        if ((mask & 1 << v) != 0) continue; // v already visited
-                        int nextMask = mask | 1 << v;
-                        int newCost = dp[mask, u] + edges[u][v];
+                        if ((mask & (1 << v)) != 0) continue;
+                        int nextMask = mask | (1 << v);
+                        int newCost = dp[mask, u] + matrix[u][v];
                         if (newCost < dp[nextMask, v])
                         {
                             dp[nextMask, v] = newCost;
                             parent[nextMask, v] = u;
 
-                            // Update snapshot: mark current transition as processing
-                            nodeColors[u] = Constants.ColorProcessing;
-                            nodeColors[v] = Constants.ColorProcessing;
-                            string edgeKey = $"{u}->{v}";
-                            if (edgeColors.ContainsKey(edgeKey))
-                                edgeColors[edgeKey] = Constants.ColorProcessing;
-                            //steps.Add(Snapshots.TakeSnapshot(nodes, nodeColors, edgeColors));
+                            snapshot.ColorNode(u, Constants.ColorProcessing);
+                            snapshot.ColorNode(v, Constants.ColorProcessing);
+                            snapshot.ColorEdge(u, v, Constants.ColorProcessing);
 
-                            // Then mark the nodes and edge as processed
-                            nodeColors[u] = Constants.ColorProcessed;
-                            nodeColors[v] = Constants.ColorProcessed;
-                            if (edgeColors.ContainsKey(edgeKey))
-                                edgeColors[edgeKey] = Constants.ColorProcessed;
-                            //steps.Add(Snapshots.TakeSnapshot(nodes, nodeColors, edgeColors));
+                            var lastStep = snapshot.Steps.Count > 0 ? snapshot.Steps[snapshot.Steps.Count - 1] : new StepState();
+                            lastStep.EdgeCurrentWeights[$"DP_{mask}_{v}"] = newCost;
+                            snapshot.Steps.Add(lastStep);
+
+                            snapshot.ColorNode(u, Constants.ColorProcessed);
+                            snapshot.ColorNode(v, Constants.ColorProcessed);
+                            snapshot.ColorEdge(u, v, Constants.ColorProcessed);
                         }
                     }
                 }
             }
 
-            // Complete the cycle by returning to the start node.
             int finalMask = numSubsets - 1;
             int bestCost = int.MaxValue;
             int bestEnd = -1;
             for (int i = 0; i < n; i++)
             {
                 if (i == start) continue;
-                int cost = dp[finalMask, i] + edges[i][start];
+                int cost = dp[finalMask, i] + matrix[i][start];
                 if (cost < bestCost)
                 {
                     bestCost = cost;
@@ -110,11 +103,9 @@ namespace BachelorProject.Server.GraphAlgorithms.HamiltonianCycle
             if (bestEnd == -1)
                 throw new InvalidOperationException("No Hamiltonian cycle exists.");
 
-            // Reconstruct the optimal path
             List<int> pathIndices = new List<int>();
             int maskRec = finalMask;
             int cur = bestEnd;
-            // Trace back until we reach the starting node
             while (cur != start)
             {
                 pathIndices.Add(cur);
@@ -124,54 +115,62 @@ namespace BachelorProject.Server.GraphAlgorithms.HamiltonianCycle
             }
             pathIndices.Add(start);
             pathIndices.Reverse();
-            // Append the starting node at the end to complete the cycle
             pathIndices.Add(start);
 
-            // Build final path representation for visualization and output
-            List<string> pathNodeNames = new List<string>();
+            for (int i = 0; i < n; i++)
+                snapshot.ColorNode(i, Constants.ColorResult);
+            for (int i = 0; i < n; i++)
+            {
+                if (i != start && parent[finalMask, i] != -1)
+                    snapshot.ColorEdge(parent[finalMask, i], i, Constants.ColorResult);
+            }
+
+            List<string> tour = new List<string>();
             foreach (int idx in pathIndices)
             {
-                pathNodeNames.Add(nodes[idx]);
-                nodeColors[idx] = Constants.ColorResult;
-                //steps.Add(Snapshots.TakeSnapshot(nodes, nodeColors, edgeColors));
-            }
-            string[] pathNodesArray = pathNodeNames.ToArray();
-            int pathCount = pathNodesArray.Length;
-            int[][] pathEdges = new int[pathCount][];
-            for (int i = 0; i < pathCount; i++)
-            {
-                pathEdges[i] = new int[pathCount];
-            }
-            // Set edge weights along the determined path and update edge colors for visualization
-            for (int i = 0; i < pathCount - 1; i++)
-            {
-                int from = Array.IndexOf(nodes, pathNodesArray[i]);
-                int to = Array.IndexOf(nodes, pathNodesArray[i + 1]);
-                pathEdges[i][i + 1] = edges[from][to];
-                string edgeKey = $"{from}->{to}";
-                if (edgeColors.ContainsKey(edgeKey))
-                    edgeColors[edgeKey] = Constants.ColorResult;
-                //steps.Add(Snapshots.TakeSnapshot(nodes, nodeColors, edgeColors));
+                tour.Add(nodes[idx]);
             }
 
-            // Build final graph DTO containing the Hamiltonian cycle (TSP tour)
-            CreateGraphRequestDto finalGraph = new CreateGraphRequestDto
+            List<string> tourEdgeIds = new List<string>();
+            for (int i = 0; i < tour.Count - 1; i++)
             {
-                GraphNodes = pathNodesArray,
-                GraphEdges = pathEdges,
-                GraphSrc = nodes[start],
-                GraphTarget = nodes[start],
-                GraphDirected = graph.GraphDirected,
-                GraphNodePositions = graph.GraphNodePositions
+                string fromId = tour[i];
+                string toId = tour[i + 1];
+                string? edgeId = snapshot.GetEdgeId(fromId, toId);
+                tourEdgeIds.Add(edgeId ?? Guid.NewGuid().ToString());
+            }
+
+            ResultGraphDto resultGraph = new ResultGraphDto
+            {
+                NodeIds = tour.ToArray(),
+                EdgeIds = tourEdgeIds.ToArray(),
+                TotalWeight = bestCost
             };
 
-            GraphStepDto result = new GraphStepDto
+            snapshot.Steps.InsertRange(0, globalSteps);
+
+            GraphStepDto stepDto = new GraphStepDto
             {
-                Steps = steps,
-                ResultGraph = finalGraph
+                Steps = snapshot.Steps,
+                ResultGraph = resultGraph
             };
 
-            return result;
+            return stepDto;
+        }
+
+        private static GraphDto CloneGraphWithNewEndpoints(GraphDto graph, string newSrc, string newTarget)
+        {
+            GraphDto clone = new GraphDto
+            {
+                Id = graph.Id,
+                Name = graph.Name,
+                IsDirected = graph.IsDirected,
+                Src = Guid.Parse(newSrc),
+                Target = Guid.Parse(newTarget),
+                Nodes = new List<NodeDto>(graph.Nodes),
+                Edges = new List<EdgeDto>(graph.Edges)
+            };
+            return clone;
         }
     }
 }

@@ -7,142 +7,124 @@ namespace BachelorProject.Server.GraphAlgorithms.EdgeColoring
     {
         public static GraphStepDto SolveGraph(GraphDto graph)
         {
-            string[] nodes = graph.GraphNodes;
-            int n = nodes.Length;
-            int[][] edges = graph.GraphEdges;
-
-            // Compute the maximum degree (Delta) of the graph.
-            int[] degree = new int[n];
-            int delta = 0;
+            // Get an array of node IDs and build an index mapping.
+            string[] nodeIds = GraphDtoConvertor.ToNodeIdArray(graph);
+            int n = nodeIds.Length;
+            Dictionary<string, int> nodeIndexMap = new Dictionary<string, int>();
             for (int i = 0; i < n; i++)
             {
-                int d = 0;
-                for (int j = 0; j < n; j++)
-                {
-                    if (edges[i][j] != 0 && i != j)
-                    {
-                        d++;
-                    }
-                }
-                degree[i] = d;
-                if (d > delta)
-                    delta = d;
+                nodeIndexMap[nodeIds[i]] = i;
             }
-            // Greedy edge coloring can use at most 2*Delta - 1 colors.
+
+            // Use the converter to get an adjacency list representation.
+            // The keys are node IDs, and the values are lists of (neighbor id, weight) pairs.
+            var adjList = GraphDtoConvertor.ToAdjacencyList(graph);
+
+            // Compute maximum degree (Delta) using the adjacency list.
+            int delta = adjList.Values.Max(list => list.Count);
             int maxColors = 2 * delta - 1;
-            // Create a list of color labels ("C1", "C2", ..., "C{maxColors}").
             List<string> colorList = new List<string>();
             for (int i = 1; i <= maxColors; i++)
             {
                 colorList.Add("C" + i);
             }
 
-            // Initialize visualization steps, node colors, and edge colors.
-            var steps = new List<StepState>();
-            var nodeColors = new string[n];
+            // Local dictionary to hold edge colors.
+            // Keys are in the form "i->j" (with i < j) representing an undirected edge.
+            Dictionary<string, string> edgeColors = new Dictionary<string, string>();
+            string GetEdgeKey(int u, int v) => u < v ? $"{u}->{v}" : $"{v}->{u}";
+
+            // Create a Snapshots instance using the full NodeDto and EdgeDto arrays.
+            Snapshots snapshot = new Snapshots(graph.Nodes.ToArray(), graph.Edges.ToArray());
+            snapshot.InitializeFromAdjacencyList(adjList);
+
+            // Process each edge in the graph via the adjacency list.
+            // To avoid duplicates in an undirected graph, we only process an edge if the source's index is less than the neighbor's.
             for (int i = 0; i < n; i++)
             {
-                nodeColors[i] = Constants.ColorBase;
-            }
-            var edgeColors = new Dictionary<string, string>();
-            // For an undirected graph, only process each edge once (i < j).
-            for (int i = 0; i < n; i++)
-            {
-                for (int j = i + 1; j < n; j++)
+                string uId = nodeIds[i];
+                if (!adjList.ContainsKey(uId))
+                    continue;
+                foreach (var (neighborId, weight) in adjList[uId])
                 {
-                    if (edges[i][j] != 0)
+                    int j = nodeIndexMap[neighborId];
+                    if (i >= j)
+                        continue; // Process each undirected edge only once.
+
+                    string edgeKey = GetEdgeKey(i, j);
+                    if (edgeColors.ContainsKey(edgeKey))
+                        continue; // Already colored.
+
+                    // Collect colors used on edges incident to vertex i.
+                    HashSet<string> usedColors = new HashSet<string>();
+                    if (adjList.ContainsKey(uId))
                     {
-                        string key = GetEdgeKey(i, j);
-                        edgeColors[key] = Constants.ColorBase; // uncolored state.
+                        foreach (var (nbr, _) in adjList[uId])
+                        {
+                            int k = nodeIndexMap[nbr];
+                            string key = GetEdgeKey(i, k);
+                            if (edgeColors.ContainsKey(key))
+                                usedColors.Add(edgeColors[key]);
+                        }
                     }
-                }
-            }
-            // Capture the initial state.
-            //steps.Add(Snapshots.TakeSnapshot(nodes, nodeColors, edgeColors));
-
-            // Process each edge in the graph in a greedy manner.
-            for (int i = 0; i < n; i++)
-            {
-                for (int j = i + 1; j < n; j++)
-                {
-                    if (edges[i][j] != 0)
+                    // And for vertex j.
+                    string vId = nodeIds[j];
+                    if (adjList.ContainsKey(vId))
                     {
-                        string key = GetEdgeKey(i, j);
-                        // Skip if already colored.
-                        if (edgeColors[key] != Constants.ColorBase)
-                            continue;
-
-                        // Get colors used on edges incident to vertex i and vertex j.
-                        HashSet<string> usedColors = new HashSet<string>();
-                        // Incident edges at vertex i.
-                        for (int k = 0; k < n; k++)
+                        foreach (var (nbr, _) in adjList[vId])
                         {
-                            if (edges[i][k] != 0)
-                            {
-                                string incidentKey = GetEdgeKey(i, k);
-                                if (edgeColors.ContainsKey(incidentKey) && edgeColors[incidentKey] != Constants.ColorBase)
-                                {
-                                    usedColors.Add(edgeColors[incidentKey]);
-                                }
-                            }
+                            int k = nodeIndexMap[nbr];
+                            string key = GetEdgeKey(j, k);
+                            if (edgeColors.ContainsKey(key))
+                                usedColors.Add(edgeColors[key]);
                         }
-                        // Incident edges at vertex j.
-                        for (int k = 0; k < n; k++)
-                        {
-                            if (edges[j][k] != 0)
-                            {
-                                string incidentKey = GetEdgeKey(j, k);
-                                if (edgeColors.ContainsKey(incidentKey) && edgeColors[incidentKey] != Constants.ColorBase)
-                                {
-                                    usedColors.Add(edgeColors[incidentKey]);
-                                }
-                            }
-                        }
-
-                        // Choose the smallest available color not used by either endpoint.
-                        string chosenColor = null;
-                        foreach (var color in colorList)
-                        {
-                            if (!usedColors.Contains(color))
-                            {
-                                chosenColor = color;
-                                break;
-                            }
-                        }
-
-                        // Assign the chosen color to the edge.
-                        edgeColors[key] = chosenColor;
-                        // Capture a snapshot after coloring the edge.
-                        //steps.Add(Snapshots.TakeSnapshot(nodes, nodeColors, edgeColors));
                     }
+
+                    // Choose the smallest available color that is not used.
+                    string chosenColor = colorList.FirstOrDefault(c => !usedColors.Contains(c));
+                    if (chosenColor == null)
+                        chosenColor = colorList.Last();
+
+                    // Record the chosen color for this edge.
+                    edgeColors[edgeKey] = chosenColor;
+                    // Update snapshot visualization (using node indices).
+                    snapshot.ColorEdge(i, j, chosenColor);
                 }
             }
 
-            // Final snapshot after processing all edges.
-            //steps.Add(Snapshots.TakeSnapshot(nodes, nodeColors, edgeColors));
-
-            // Construct the final graph output (edge colors are stored in the edgeColors dictionary).
-            CreateGraphRequestDto finalGraph = new CreateGraphRequestDto
+            // Finalize node colors.
+            for (int i = 0; i < n; i++)
             {
-                GraphNodes = nodes,
-                GraphEdges = edges,
-                GraphDirected = graph.GraphDirected,
-                GraphNodePositions = graph.GraphNodePositions
+                snapshot.ColorNode(i, Constants.ColorResult);
+            }
+
+            // Build the minimal result graph.
+            // For each processed edge, retrieve its original edge ID from the snapshot's lookup.
+            List<string> resultEdgeIds = new List<string>();
+            foreach (var kvp in edgeColors)
+            {
+                // The key is "i->j". Parse indices.
+                var parts = kvp.Key.Split("->");
+                int u = int.Parse(parts[0]);
+                int v = int.Parse(parts[1]);
+                string edgeId = snapshot.GetEdgeId(nodeIds[u], nodeIds[v]) ?? Guid.NewGuid().ToString();
+                resultEdgeIds.Add(edgeId);
+            }
+
+            ResultGraphDto resultGraph = new ResultGraphDto
+            {
+                NodeIds = nodeIds,
+                EdgeIds = resultEdgeIds.ToArray()
             };
 
+            // Return the step DTO with snapshots and the minimal result graph.
             GraphStepDto stepDto = new GraphStepDto
             {
-                Steps = steps,
-                ResultGraph = finalGraph
+                Steps = snapshot.Steps,
+                ResultGraph = resultGraph
             };
 
             return stepDto;
-        }
-
-        // Helper method to generate a unique key for an undirected edge.
-        private static string GetEdgeKey(int u, int v)
-        {
-            return u < v ? $"{u}->{v}" : $"{v}->{u}";
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using BachelorProject.Server.GraphAlgorithms.MinimumTree;
+using BachelorProject.Server.Helpers;
 using BachelorProject.Server.Models.DTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +11,7 @@ namespace BachelorProject.Server.Controllers
     public class KruskalController : ControllerBase
     {
         [HttpPost]
-        public async Task<IActionResult> RunAlgo(CreateGraphRequestDto request)
+        public async Task<IActionResult> RunAlgo(GraphDto request)
         {
             try
             {

@@ -2,7 +2,8 @@
 {
     public class ResultGraphDto
     {
-        public string[] nodeIds {  get; set; }
-        public string[] edgeIds { get; set; }
+        public string[] NodeIds {  get; set; }
+        public string[] EdgeIds { get; set; }
+        public int? TotalWeight { get; set; }
     }
 }

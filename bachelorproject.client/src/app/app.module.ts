@@ -11,6 +11,8 @@ import { GraphConstructFromBackendComponent } from './Components/graph-construct
 import { GraphSelectionComponent } from './Components/graph-selection/graph-selection.component';
 import { EdgeWeightComponent } from './Components/edge-weight/edge-weight.component';
 import { EdgesConnectionComponent } from './Components/edges-connection/edges-connection.component';
+import { RenameNodesComponent } from './Components/rename-nodes/rename-nodes.component';
+import { TooltipComponent } from './Components/tooltip/tooltip.component';
 
 @NgModule({
   declarations: [
@@ -20,7 +22,9 @@ import { EdgesConnectionComponent } from './Components/edges-connection/edges-co
     GraphConstructFromBackendComponent,
     GraphSelectionComponent,
     EdgeWeightComponent,
-    EdgesConnectionComponent
+    EdgesConnectionComponent,
+    RenameNodesComponent,
+    TooltipComponent
   ],
   imports: [
     BrowserModule, HttpClientModule,

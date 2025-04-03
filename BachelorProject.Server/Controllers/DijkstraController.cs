@@ -16,10 +16,7 @@ namespace BachelorProject.Server.Controllers
         {
             try
             {
-                string[] nodeIds = GraphDtoConvertor.ToNodeIdArray(request);
-                int[][] matrix = GraphDtoConvertor.ToAdjacencyMatrix(request);
-                Snapshots snapshot = new(request.Nodes.ToArray(), request.Edges.ToArray());
-                GraphStepDto result = DijkstraAlgo.SolveGraph(nodeIds, matrix, request.Src.ToString()!, request.Target.ToString()!, snapshot);
+                GraphStepDto result = DijkstraAlgo.SolveGraph(request);
                 return Ok(result);
             }
             catch (Exception ex)

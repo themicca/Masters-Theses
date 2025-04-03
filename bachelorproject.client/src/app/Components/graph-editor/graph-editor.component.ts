@@ -19,6 +19,7 @@ export class GraphEditorComponent implements AfterViewInit {
   @ViewChild(GraphSelectionComponent) selectionComponent!: GraphSelectionComponent;
   @ViewChild(EdgeWeightComponent) edgeWeightComponent!: EdgeWeightComponent;
   @ViewChild(EdgesConnectionComponent) edgesConnectionComponent!: EdgesConnectionComponent;
+
   protected graph!: joint.dia.Graph;
   protected paper!: joint.dia.Paper;
   private nodeRadius: number = 80;
@@ -26,6 +27,7 @@ export class GraphEditorComponent implements AfterViewInit {
   protected directed: boolean = true;
   protected startNode: joint.dia.Element | null = null;
   protected endNode: joint.dia.Element | null = null;
+  private tooltipElement!: HTMLElement;
   private readonly defaultWeight = 1;
 
   constructor() { }
@@ -34,6 +36,7 @@ export class GraphEditorComponent implements AfterViewInit {
     setTimeout(() => {
       this.initGraph();
       this.addListeners();
+      this.initTooltips();
     });
     this.enableDragging();
     this.initEdgeCreation();
@@ -175,7 +178,50 @@ export class GraphEditorComponent implements AfterViewInit {
       }
     });
   }
-  
+
+  private initTooltips(): void {
+    this.tooltipElement = document.createElement('div');
+    this.tooltipElement.className = 'graph-tooltip';
+    this.tooltipElement.style.display = 'none';
+    this.tooltipElement.style.position = 'fixed';
+    this.tooltipElement.style.backgroundColor = '#fff';
+    this.tooltipElement.style.color = '#333';
+    this.tooltipElement.style.border = '1px solid #ccc';
+    this.tooltipElement.style.borderRadius = '4px';
+    this.tooltipElement.style.padding = '8px 12px';
+    this.tooltipElement.style.fontSize = '14px';
+    this.tooltipElement.style.fontFamily = 'Arial, sans-serif';
+    this.tooltipElement.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.15)';
+    this.tooltipElement.style.zIndex = '999999';
+    document.body.appendChild(this.tooltipElement);
+    
+    const sampleNodeEl = this.sampleNode.nativeElement as HTMLElement;
+    sampleNodeEl.addEventListener('mouseenter', (event: MouseEvent) => {
+      this.tooltipElement.innerText = 'Drag this to the paper to make a node';
+      this.tooltipElement.style.display = 'block';
+    });
+    sampleNodeEl.addEventListener('mouseleave', () => {
+      this.tooltipElement.style.display = 'none';
+    });
+    sampleNodeEl.addEventListener('mousemove', (event: MouseEvent) => {
+      this.tooltipElement.style.left = event.clientX + 10 + 'px';
+      this.tooltipElement.style.top = event.clientY + 10 + 'px';
+    });
+    
+    const sampleEdgeEl = this.sampleEdge.nativeElement as HTMLElement;
+    sampleEdgeEl.addEventListener('mouseenter', (event: MouseEvent) => {
+      this.tooltipElement.innerText = 'Click this to create an edge';
+      this.tooltipElement.style.display = 'block';
+    });
+    sampleEdgeEl.addEventListener('mouseleave', () => {
+      this.tooltipElement.style.display = 'none';
+    });
+    sampleEdgeEl.addEventListener('mousemove', (event: MouseEvent) => {
+      this.tooltipElement.style.left = event.clientX + 10 + 'px';
+      this.tooltipElement.style.top = event.clientY + 10 + 'px';
+    });
+  }
+
   private showContextMenu(x: number, y: number, type: 'node' | 'edge'): void {
     this.hideAllContextMenus();
 
@@ -290,6 +336,33 @@ export class GraphEditorComponent implements AfterViewInit {
     this.directed = !this.directed;
     console.log(`Graph is now ${this.directed ? 'Directional' : 'Non-Directional'}`);
 
+    if (!this.directed) {
+      const links = this.graph.getLinks();
+      const processed = new Set<string>();
+      links.forEach(link => {
+        if (processed.has(link.id.toString())) {
+          return;
+        }
+        const src = link.getSourceElement();
+        const tgt = link.getTargetElement();
+        if (src && tgt) {
+          const oppositeLink = this.graph.getLinks().find(l =>
+            l.id !== link.id &&
+            !processed.has(l.id.toString()) &&
+            l.getSourceElement() === tgt &&
+            l.getTargetElement() === src
+          );
+          if (oppositeLink) {
+            link.vertices([]);
+            this.graph.removeCells([oppositeLink]);
+            processed.add(link.id.toString());
+            processed.add(oppositeLink.id.toString());
+          }
+        }
+      });
+    }
+
+
     setTimeout(() => {
       this.graph.getLinks().forEach(link => {
         this.edgesConnectionComponent.updateLinkStyle(link);
@@ -375,8 +448,9 @@ export class GraphEditorComponent implements AfterViewInit {
   }
 
   private addNode(x: number, y: number, label: string): void {
-    const circle = new joint.shapes.standard.Circle();
-    circle.id = uuidv4();
+    const circle = new joint.shapes.standard.Circle({
+      id: uuidv4()
+    });
     circle.position(x - this.nodeRadius / 2, y - this.nodeRadius / 2);
     circle.resize(this.nodeRadius, this.nodeRadius);
     circle.attr({

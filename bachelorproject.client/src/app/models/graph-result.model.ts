@@ -1,4 +1,5 @@
 export interface GraphResult {
   nodeIds: string[],
-  edgeIds: string[]
+  edgeIds: string[],
+  TotalWeight?: number
 }

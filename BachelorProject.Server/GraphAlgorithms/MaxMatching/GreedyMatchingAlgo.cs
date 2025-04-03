@@ -7,110 +7,74 @@ namespace BachelorProject.Server.GraphAlgorithms.MaxMatching
     {
         // SolveGraph runs a greedy matching algorithm for an undirected graph.
         // It returns a series of snapshots and a final graph showing the matching.
-        public static GraphStepDto SolveGraph(CreateGraphRequestDto graph)
+        public static GraphStepDto SolveGraph(GraphDto graph)
         {
-            string[] nodes = graph.GraphNodes;
-            int n = nodes.Length;
-            int[][] edges = graph.GraphEdges; // Assumes a symmetric matrix for an undirected graph.
+            // Convert the graph into an adjacency matrix and node ID array.
+            string[] nodeIds = GraphDtoConvertor.ToNodeIdArray(graph);
+            int n = nodeIds.Length;
+            int[][] edges = GraphDtoConvertor.ToAdjacencyMatrix(graph);
 
             // Initialize matching array; -1 indicates unmatched.
             int[] match = new int[n];
             for (int i = 0; i < n; i++)
                 match[i] = -1;
 
-            // For visualization: initialize snapshots, node colors, and edge colors.
-            var steps = new List<StepState>();
-            var nodeColors = new string[n];
-            for (int i = 0; i < n; i++)
-                nodeColors[i] = Constants.ColorBase;
+            // Create a Snapshots instance for visualization.
+            Snapshots snapshot = new Snapshots(graph.Nodes.ToArray(), graph.Edges.ToArray());
 
-            var edgeColors = new Dictionary<string, string>();
-            // Only consider each undirected edge once (i < j).
+            // Greedily match vertices: for each vertex i, if unmatched, try to match it with a later vertex j.
             for (int i = 0; i < n; i++)
             {
-                for (int j = i + 1; j < n; j++)
-                {
-                    if (edges[i][j] != 0 && edges[i][j] < Constants.MaxWeight)
-                    {
-                        string key = $"{i}->{j}";
-                        edgeColors[key] = Constants.ColorBase;
-                    }
-                }
-            }
-
-            // Iterate over all vertex pairs to greedily add matches.
-            for (int i = 0; i < n; i++)
-            {
-                // Skip if vertex i is already matched.
                 if (match[i] != -1)
                     continue;
-
                 for (int j = i + 1; j < n; j++)
                 {
-                    // Skip if vertex j is already matched.
                     if (match[j] != -1)
                         continue;
-
-                    // If there is an edge between i and j, match them.
+                    // If an edge exists between i and j, greedily match them.
                     if (edges[i][j] != 0 && edges[i][j] < Constants.MaxWeight)
                     {
-                        string edgeKey = $"{i}->{j}";
+                        // Visualize edge processing.
+                        snapshot.ColorEdge(i, j, Constants.ColorProcessing);
 
-                        // Mark edge as processing and snapshot.
-                        if (edgeColors.ContainsKey(edgeKey))
-                        {
-                            edgeColors[edgeKey] = Constants.ColorProcessing;
-                            //steps.Add(Snapshots.TakeSnapshot(nodes, nodeColors, edgeColors));
-                        }
-
-                        // Greedily match i and j.
+                        // Set the matching.
                         match[i] = j;
                         match[j] = i;
 
-                        // Update colors: mark nodes and the edge as part of the result.
-                        nodeColors[i] = Constants.ColorResult;
-                        nodeColors[j] = Constants.ColorResult;
-                        if (edgeColors.ContainsKey(edgeKey))
-                            edgeColors[edgeKey] = Constants.ColorResult;
+                        // Mark the vertices and the edge as part of the result.
+                        snapshot.ColorNode(i, Constants.ColorResult);
+                        snapshot.ColorNode(j, Constants.ColorResult);
+                        snapshot.ColorEdge(i, j, Constants.ColorResult);
 
-                        //steps.Add(Snapshots.TakeSnapshot(nodes, nodeColors, edgeColors));
                         break; // Move to the next vertex i after a match.
                     }
                 }
             }
 
-            // Prepare the final graph: include only the matched edges.
-            int[][] matchingEdges = new int[n][];
+            // Build the list of matching edge IDs.
+            List<string> matchingEdgeIds = new List<string>();
             for (int i = 0; i < n; i++)
             {
-                matchingEdges[i] = new int[n];
-                for (int j = 0; j < n; j++)
-                    matchingEdges[i][j] = 0;
-            }
-            for (int i = 0; i < n; i++)
-            {
+                // For each matched edge, include it only once.
                 if (match[i] != -1 && i < match[i])
                 {
-                    matchingEdges[i][match[i]] = edges[i][match[i]];
-                    matchingEdges[match[i]][i] = edges[match[i]][i];
+                    string edgeId = snapshot.GetEdgeId(nodeIds[i], nodeIds[match[i]]) ?? Guid.NewGuid().ToString();
+                    matchingEdgeIds.Add(edgeId);
                 }
             }
 
-            // Create the final graph DTO.
-            CreateGraphRequestDto finalGraph = new CreateGraphRequestDto
+            // Build the minimal result graph.
+            ResultGraphDto resultGraph = new ResultGraphDto
             {
-                GraphNodes = nodes,
-                GraphEdges = matchingEdges,
-                GraphSrc = "",    // Not applicable for matching.
-                GraphTarget = "",
-                GraphDirected = false,
-                GraphNodePositions = graph.GraphNodePositions
+                NodeIds = nodeIds,
+                EdgeIds = matchingEdgeIds.ToArray()
             };
 
+            // Package snapshots and the minimal result graph into the final DTO.
             GraphStepDto resultDto = new GraphStepDto
             {
-                Steps = steps,
-                ResultGraph = finalGraph
+                Steps = snapshot.Steps,
+                ResultGraph = resultGraph
             };
 
             return resultDto;

@@ -175,7 +175,7 @@ export class GraphService {
     if (!this.directed) {
       let oddCount = 0;
       for (const node of this.nodes) {
-        const degree = this.edges.filter(e => e.source === node.id || e.target === node.id).length;
+        const degree = this.edges.filter(e => e.sourceNodeId === node.id || e.targetNodeId === node.id).length;
         if (degree % 2 !== 0) {
           oddCount++;
         }
@@ -186,6 +186,7 @@ export class GraphService {
         this.errors.push('Expected 0 for an Eulerian circuit or 2 for an Eulerian path in an undirected graph.')
       }
     } else {
+      this.errors.push('Requires undirected graph.')
       const inDegreeMap = new Map<string, number>();
       const outDegreeMap = new Map<string, number>();
       for (const node of this.nodes) {
@@ -193,8 +194,8 @@ export class GraphService {
         outDegreeMap.set(node.id, 0);
       }
       for (const edge of this.edges) {
-        outDegreeMap.set(edge.source, (outDegreeMap.get(edge.source) || 0) + 1);
-        inDegreeMap.set(edge.target, (inDegreeMap.get(edge.target) || 0) + 1);
+        outDegreeMap.set(edge.sourceNodeId, (outDegreeMap.get(edge.sourceNodeId) || 0) + 1);
+        inDegreeMap.set(edge.targetNodeId, (inDegreeMap.get(edge.targetNodeId) || 0) + 1);
       }
       let startNodes = 0;
       let endNodes = 0;

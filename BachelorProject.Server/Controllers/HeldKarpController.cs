@@ -10,7 +10,7 @@ namespace BachelorProject.Server.Controllers
     public class HeldKarpController : ControllerBase
     {
         [HttpPost]
-        public async Task<IActionResult> RunAlgo(CreateGraphRequestDto request)
+        public async Task<IActionResult> RunAlgo(GraphDto request)
         {
             try
             {

@@ -105,6 +105,24 @@ namespace BachelorProject.Server.Helpers
             }
         }
 
+        public void UpdateCurrentEdgeWeights(Dictionary<string, int> currentEdgeWeights)
+        {
+            if (Steps.Count > 0)
+            {
+                var lastStep = Steps[Steps.Count - 1];
+                lastStep.EdgeCurrentWeights = new Dictionary<string, int>(currentEdgeWeights);
+            }
+        }
+
+        public void UpdateCurrentTotalWeight(int currentTotalWeight)
+        {
+            if (Steps.Count > 0)
+            {
+                var lastStep = Steps[Steps.Count - 1];
+                lastStep.CurrentTotalWeight = currentTotalWeight;
+            }
+        }
+
         // Updates the color of a node using its node id.
         public void ColorNode(string nodeId, string color)
         {

@@ -49,9 +49,19 @@ namespace BachelorProject.Server.Helpers
         }
 
         // ---------- EDGE LIST ----------
-        public static List<(string edgeId, int weight)> ToEdgeList(GraphDto graph)
+        public static List<(string edgeId, string sourceId, string targetId, int weight)> ToEdgeListDetailed(GraphDto graph)
         {
-            return graph.Edges.Select(e => (e.Id.ToString(), e.Weight)).ToList();
+            var edges = new List<(string, string, string, int)>();
+            foreach (var e in graph.Edges)
+            {
+                edges.Add((
+                    e.Id.ToString(),
+                    e.SourceNodeId.ToString(),
+                    e.TargetNodeId.ToString(),
+                    e.Weight
+                ));
+            }
+            return edges;
         }
 
         // ---------- NODE ID TO NODE MAP ----------

@@ -10,7 +10,7 @@ namespace BachelorProject.Server.Controllers
     public class GreedyMatchingController : ControllerBase
     {
         [HttpPost]
-        public async Task<IActionResult> RunAlgo(CreateGraphRequestDto request)
+        public async Task<IActionResult> RunAlgo(GraphDto request)
         {
             try
             {
@@ -22,5 +22,6 @@ namespace BachelorProject.Server.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
     }
 }

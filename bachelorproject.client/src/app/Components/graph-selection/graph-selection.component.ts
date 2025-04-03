@@ -279,6 +279,21 @@ export class GraphSelectionComponent {
     if (this.selectedElements.length === 0) return { startNode, endNode };
 
     this.selectedElements.forEach(item => {
+      if (item.isLink()) {
+        const link = item as joint.dia.Link;
+        const source = link.getSourceElement();
+        const target = link.getTargetElement();
+
+        if (source && target) {
+          const oppositeLink = this.graph.getLinks().find(l =>
+            l.getSourceElement() === target && l.getTargetElement() === source
+          );
+          if (oppositeLink) {
+            oppositeLink.vertices([]);
+          }
+        }
+      }
+
       if (item === startNode) {
         startNode = null;
       }

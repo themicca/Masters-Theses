@@ -58,8 +58,9 @@ export class EdgesConnectionComponent {
   }
 
   private createLink(source: joint.dia.Element, target: joint.dia.Element): void {
-    const link = new joint.shapes.standard.Link();
-    link.id = uuidv4();
+    const link = new joint.shapes.standard.Link({
+      id: uuidv4()
+    });
     link.source(source);
     link.target(target);
     this.updateLinkStyle(link);

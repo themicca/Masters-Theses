@@ -38,8 +38,7 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
             }
 
             // Create a Snapshots instance for recording algorithm progress.
-            Snapshots snapshot = new Snapshots(graph.Nodes.ToArray(), graph.Edges.ToArray());
-            snapshot.InitializeFromAdjacencyMatrix(capacity);
+            Snapshots snapshot = new Snapshots(graph);
 
             // Main loop: find augmenting paths until none exist.
             while (true)

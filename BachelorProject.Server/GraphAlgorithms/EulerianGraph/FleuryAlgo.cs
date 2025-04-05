@@ -45,7 +45,7 @@ namespace BachelorProject.Server.GraphAlgorithms.EulerianGraph
             }
 
             // Create a Snapshots instance for visualization.
-            Snapshots snapshot = new Snapshots(graph.Nodes.ToArray(), graph.Edges.ToArray());
+            Snapshots snapshot = new Snapshots(graph);
 
             // Run Fleury’s algorithm to get the Eulerian path (stored as indices).
             List<int> eulerPath = new List<int>();

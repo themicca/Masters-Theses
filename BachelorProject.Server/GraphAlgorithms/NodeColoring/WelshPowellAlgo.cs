@@ -13,7 +13,7 @@ namespace BachelorProject.Server.GraphAlgorithms.NodeColoring
             int n = nodes.Length;
 
             // Create a Snapshots instance for visualization.
-            Snapshots snapshot = new Snapshots(graph.Nodes.ToArray(), graph.Edges.ToArray());
+            Snapshots snapshot = new Snapshots(graph);
 
             // Compute the degree of each node using the matrix.
             int[] degrees = new int[n];

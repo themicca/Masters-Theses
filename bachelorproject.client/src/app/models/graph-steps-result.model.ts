@@ -8,6 +8,6 @@ export interface GraghStepsResult {
 export interface StepState {
   nodeColors: { [nodeId: string]: string };
   edgeColors: { [edgeId: string]: string };
-  edgeCurrentWeights: { [edgeId: string]: number };
+  edgeCurrentWeights: { [edgeId: string]: number | null };
   currentTotalWeight: number;
 }

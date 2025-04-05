@@ -124,9 +124,6 @@ export class GraphService {
     if (!this.src) {
       this.errors.push('Start node is not set.');
     }
-    if (!this.target) {
-      this.errors.push('End node is not set.');
-    }
     this.graph!.getLinks().some(link => {
       if (link.attr('weight') < 1) {
         this.errors.push('There are negative edges.');
@@ -161,6 +158,9 @@ export class GraphService {
     }
     if (!this.target) {
       this.errors.push('Sink node is not set.');
+    }
+    if (!this.directed) {
+      this.errors.push('Requires directed graph.');
     }
     this.graph!.getLinks().some(link => {
       if (link.attr('weight') < 1) {

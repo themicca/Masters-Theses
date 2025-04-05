@@ -3,8 +3,6 @@ import { GraphResponseDataService } from '../../services/graph.response.data.ser
 import * as joint from 'jointjs';
 import { GraphRequest } from '../../models/graph-request.model';
 import { StepState } from '../../models/graph-steps-result.model';
-import { GraphNode } from '../../models/graph-node.model';
-import { GraphEdge } from '../../models/graph-edge.model';
 import { GraphResult } from '../../models/graph-result.model';
 
 @Component({
@@ -14,6 +12,7 @@ import { GraphResult } from '../../models/graph-result.model';
 })
 export class GraphConstructFromBackendComponent {
   @ViewChild('resultContainer', { static: false }) resultContainer!: ElementRef;
+  @ViewChild('resultTextDiv', { static: false }) resultTextDiv!: ElementRef;
   @ViewChild('stepsContainer', { static: false }) stepsContainer!: ElementRef;
 
   constructor(private graphResponseDataService: GraphResponseDataService) { }
@@ -51,6 +50,8 @@ export class GraphConstructFromBackendComponent {
       paperDiv.style.width = '100%';
       paperDiv.style.height = '650px';
       paperDiv.style.marginBottom = '20px';
+      paperDiv.style.margin = '0 auto';
+      paperDiv.style.border = '1px solid #ccc';
       stepWrapper.appendChild(paperDiv);
       
       const stepGraph = new joint.dia.Graph();
@@ -112,27 +113,28 @@ export class GraphConstructFromBackendComponent {
   }
 
   private reconstructGraph(resultGraph: GraphResult, graphRequest: GraphRequest) {
+    this.resultTextDiv.nativeElement.innerHTML = '';
     this.resultContainer.nativeElement.innerHTML = '';
-    
-    if (resultGraph.TotalWeight != null) {
+
+    if (resultGraph.totalWeight != null) {
       const totalWeightHeader = document.createElement('div');
-      totalWeightHeader.innerText = `Total Weight: ${resultGraph.TotalWeight}`;
+      totalWeightHeader.innerText = `Total Weight: ${resultGraph.totalWeight}`;
       totalWeightHeader.style.fontWeight = 'bold';
       totalWeightHeader.style.marginBottom = '10px';
-      this.resultContainer.nativeElement.appendChild(totalWeightHeader);
+      this.resultTextDiv.nativeElement.appendChild(totalWeightHeader);
     }
     
     const paperDiv = document.createElement('div');
-    paperDiv.style.width = '95%';
-    paperDiv.style.height = '500px';
+    paperDiv.style.width = '100%';
+    paperDiv.style.height = '650px';
     this.resultContainer.nativeElement.appendChild(paperDiv);
 
     const graph = new joint.dia.Graph();
     const paper = new joint.dia.Paper({
       el: paperDiv,
       model: graph,
-      width: '95%',
-      height: 500,
+      width: '100%',
+      height: 650,
       gridSize: 10,
       drawGrid: true,
       background: { color: '#f8f9fa' }

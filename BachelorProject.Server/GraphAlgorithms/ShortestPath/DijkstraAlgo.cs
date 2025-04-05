@@ -32,8 +32,7 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
             bool targetProvided = !string.IsNullOrWhiteSpace(graph.Target?.ToString());
             string? target = targetProvided ? graph.Target.ToString() : null;
 
-            Snapshots snapshot = new Snapshots(graph.Nodes.ToArray(), graph.Edges.ToArray());
-            snapshot.InitializeFromAdjacencyMatrix(edgeMatrix);
+            Snapshots snapshot = new Snapshots(graph);
 
             int currentTotalWeight = 0;
 
@@ -62,7 +61,6 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
 
                 sptSet[u] = true;
                 snapshot.ColorNode(u, Constants.ColorProcessing);
-                snapshot.UpdateCurrentTotalWeight(currentTotalWeight);
 
                 for (int v = 0; v < nodesCount; v++)
                 {
@@ -88,7 +86,6 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
                     }
                 }
                 snapshot.ColorNode(u, Constants.ColorProcessed);
-                snapshot.UpdateCurrentTotalWeight(currentTotalWeight);
             }
 
             ResultGraphDto resultGraph = new ResultGraphDto();

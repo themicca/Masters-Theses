@@ -35,8 +35,7 @@ namespace BachelorProject.Server.GraphAlgorithms.EdgeColoring
             string GetEdgeKey(int u, int v) => u < v ? $"{u}->{v}" : $"{v}->{u}";
 
             // Create a Snapshots instance using the full NodeDto and EdgeDto arrays.
-            Snapshots snapshot = new Snapshots(graph.Nodes.ToArray(), graph.Edges.ToArray());
-            snapshot.InitializeFromAdjacencyList(adjList);
+            Snapshots snapshot = new Snapshots(graph);
 
             // Process each edge in the graph via the adjacency list.
             // To avoid duplicates in an undirected graph, we only process an edge if the source's index is less than the neighbor's.

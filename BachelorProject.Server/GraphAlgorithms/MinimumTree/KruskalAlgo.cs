@@ -27,10 +27,7 @@ namespace BachelorProject.Server.GraphAlgorithms.MinimumTree
 
             string[] nodeIds = GraphDtoConvertor.ToNodeIdArray(graph);
             var edgeList = GraphDtoConvertor.ToEdgeListDetailed(graph);
-            Snapshots snapshot = new Snapshots(
-                graph.Nodes.ToArray(),
-                graph.Edges.ToArray()
-            );
+            Snapshots snapshot = new Snapshots(graph);
 
             int nodesCount = nodeIds.Length;
 
@@ -67,7 +64,6 @@ namespace BachelorProject.Server.GraphAlgorithms.MinimumTree
 
             foreach (var edge in allEdges)
             {
-                // Visualize processing this edge
                 snapshot.ColorEdge(edge.From, edge.To, Constants.ColorProcessing);
 
                 int root1 = Find(parent, edge.From);
@@ -75,7 +71,6 @@ namespace BachelorProject.Server.GraphAlgorithms.MinimumTree
 
                 if (root1 != root2)
                 {
-                    // This edge is accepted into the MST
                     mstEdges.Add(edge);
                     Union(parent, root1, root2);
 
@@ -83,8 +78,7 @@ namespace BachelorProject.Server.GraphAlgorithms.MinimumTree
                 }
                 else
                 {
-                    // This edge would form a cycle -> skip it
-                    snapshot.ColorEdge(edge.From, edge.To, Constants.ColorResult);
+                    snapshot.ColorEdge(edge.From, edge.To, Constants.ColorDiscarded);
                 }
             }
 

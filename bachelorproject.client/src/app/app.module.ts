@@ -4,7 +4,7 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { NavbarComponent } from './Components/navbar/navbar.component';
+import { GraphSubmitComponent } from './Components/graph-submit/graph-submit.component';
 import { FormsModule } from '@angular/forms';
 import { GraphEditorComponent } from './Components/graph-editor/graph-editor.component';
 import { GraphConstructFromBackendComponent } from './Components/graph-construct-from-backend/graph-construct-from-backend.component';
@@ -17,7 +17,7 @@ import { TooltipComponent } from './Components/tooltip/tooltip.component';
 @NgModule({
   declarations: [
     AppComponent,
-    NavbarComponent,
+    GraphSubmitComponent,
     GraphEditorComponent,
     GraphConstructFromBackendComponent,
     GraphSelectionComponent,

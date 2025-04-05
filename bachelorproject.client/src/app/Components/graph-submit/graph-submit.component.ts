@@ -9,11 +9,11 @@ import { GraphEdge } from '../../models/graph-edge.model';
 import { GraghStepsResult } from '../../models/graph-steps-result.model';
 
 @Component({
-  selector: 'app-navbar',
-  templateUrl: './navbar.component.html',
-  styleUrl: './navbar.component.css'
+  selector: 'app-graph-submit',
+  templateUrl: './graph-submit.component.html',
+  styleUrl: './graph-submit.component.css'
 })
-export class NavbarComponent implements OnDestroy {
+export class GraphSubmitComponent implements OnDestroy {
   @Input() graph!: joint.dia.Graph;
   @Input() graphSrc: joint.dia.Element | null = null;
   @Input() graphTarget: joint.dia.Element | null = null;

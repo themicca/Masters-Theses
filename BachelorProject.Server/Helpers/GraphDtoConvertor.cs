@@ -33,7 +33,6 @@ namespace BachelorProject.Server.Helpers
             return matrix;
         }
 
-        // ---------- ADJACENCY LIST ----------
         public static Dictionary<string, List<(string to, int weight)>> ToAdjacencyList(GraphDto graph)
         {
             var adjList = graph.Nodes.ToDictionary(n => n.Id.ToString(), _ => new List<(string, int)>());
@@ -48,7 +47,6 @@ namespace BachelorProject.Server.Helpers
             return adjList;
         }
 
-        // ---------- EDGE LIST ----------
         public static List<(string edgeId, string sourceId, string targetId, int weight)> ToEdgeListDetailed(GraphDto graph)
         {
             var edges = new List<(string, string, string, int)>();
@@ -64,7 +62,6 @@ namespace BachelorProject.Server.Helpers
             return edges;
         }
 
-        // ---------- NODE ID TO NODE MAP ----------
         public static string[] ToNodeIdArray(GraphDto graph)
         {
             string[] nodes = new string[graph.Nodes.Count];
@@ -73,6 +70,34 @@ namespace BachelorProject.Server.Helpers
                 nodes[i] = graph.Nodes[i].Id.ToString();
             }
             return nodes;
+        }
+
+        public static string[] ToEdgeIdArray(GraphDto graph)
+        {
+            string[] edges = new string[graph.Edges.Count];
+            for (int i = 0; i < graph.Edges.Count; i++)
+            {
+                edges[i] = graph.Edges[i].Id.ToString();
+            }
+            return edges;
+        }
+
+        public static Dictionary<string, string> EdgeLookup(GraphDto graph)
+        {
+            Dictionary<string, string> edgeLookup = new Dictionary<string, string>();
+            foreach (var edge in graph.Edges)
+            {
+                string key = $"{edge.SourceNodeId}->{edge.TargetNodeId}";
+                if (!edgeLookup.ContainsKey(key))
+                    edgeLookup[key] = edge.Id.ToString();
+                if (!graph.IsDirected)
+                {
+                    key = $"{edge.TargetNodeId}->{edge.SourceNodeId}";
+                    if (!edgeLookup.ContainsKey(key))
+                        edgeLookup[key] = edge.Id.ToString();
+                }
+            }
+            return edgeLookup;
         }
     }
 }

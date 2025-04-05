@@ -52,8 +52,7 @@ namespace BachelorProject.Server.GraphAlgorithms.HamiltonianCycle
             }
             dp[1 << start, start] = 0;
 
-            Snapshots snapshot = new Snapshots(graph.Nodes.ToArray(), graph.Edges.ToArray());
-            snapshot.InitializeFromAdjacencyMatrix(matrix);
+            Snapshots snapshot = new Snapshots(graph);
 
             for (int mask = 0; mask < numSubsets; mask++)
             {

@@ -6,7 +6,7 @@
         public string Label { get; set; } = string.Empty;
         public float X { get; set; }
         public float Y { get; set; }
-        public bool IsStart { get; set; } = false;
-        public bool IsEnd { get; set; } = false;
+        public bool? IsStart { get; set; }
+        public bool? IsEnd { get; set; }
     }
 }

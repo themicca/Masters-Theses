@@ -18,25 +18,17 @@ export class GraphSubmitComponent implements OnDestroy {
   @Input() graphSrc: joint.dia.Element | null = null;
   @Input() graphTarget: joint.dia.Element | null = null;
   @Input() directed!: boolean;
+  @Input() weighted!: boolean;
 
   showModal = false;
   algo: string = "Algo";
   errors: string[] = [];
 
   private addGraphSubscription?: Subscription
-  private graphModel: GraphRequest = {
-    id: uuidv4(),
-    name: "",
-    nodes: [],
-    edges: [],
-    src: null,
-    target: null,
-    isDirected: false
-  }
   
   constructor(private graphService: GraphService, private graphResponseDataSerivce: GraphResponseDataService) { }
 
-  private extractGraphData(graphModel: GraphRequest): GraphRequest {
+  private extractGraphData(): GraphRequest {
     const elements = this.graph.getElements();
     const nodes: GraphNode[] = elements.map((node: joint.dia.Element) => ({
       id: node.id.toString(),
@@ -58,19 +50,21 @@ export class GraphSubmitComponent implements OnDestroy {
         weight: link.attr('weight') || 1
       };
     });
-    
-    graphModel.name = "";
-    graphModel.src = this.graphSrc ? this.graphSrc.id.toString() : null;
-    graphModel.target = this.graphTarget ? this.graphTarget.id.toString() : null;
-    graphModel.nodes = nodes;
-    graphModel.edges = edges;
-    graphModel.isDirected = this.directed;
-
+    const graphModel: GraphRequest = {
+      id: uuidv4(),
+      name: "",
+      nodes: nodes,
+      edges: edges,
+      src: this.graphSrc ? this.graphSrc.id.toString() : null,
+      target: this.graphTarget ? this.graphTarget.id.toString() : null,
+      isDirected: this.directed,
+      isWeighted: this.weighted
+    };
     return graphModel;
   }
 
   onSubmit(algo: string = 'Algo') {
-    const graphData = this.extractGraphData(this.graphModel);
+    const graphData = this.extractGraphData();
     this.errors = this.graphService.validate(algo, this.graph, graphData);
     
     if (this.errors.length > 0) {

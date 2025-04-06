@@ -11,6 +11,6 @@
         public Dictionary<string, string> NodeColors { get; set; } = [];
         public Dictionary<string, string> EdgeColors { get; set; } = [];
         public Dictionary<string, int?> EdgeCurrentWeights { get; set; } = [];
-        public int CurrentTotalWeight { get; set; }
+        public int? CurrentTotalWeight { get; set; }
     }
 }

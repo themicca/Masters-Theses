@@ -7,7 +7,8 @@ namespace BachelorProject.Server.Helpers
         public static int MaxWeight { get; private set; } = int.MaxValue;
         public static int MinWeight { get; private set;} = int.MinValue;
 
-        public static string ColorBase { get; private set; } = "#3498db";
+        public static string ColorBaseNode { get; private set; } = "#3498db";
+        public static string ColorBaseEdge { get; private set; } = "black";
         public static string ColorProcessing { get; private set; } = "orange";
         public static string ColorProcessed { get; private set; } = "blue";
         public static string ColorResult { get; private set; } = "green";

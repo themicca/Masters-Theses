@@ -11,6 +11,7 @@ export class EdgesConnectionComponent {
   @Input() graph!: joint.dia.Graph;
   @Input() paper!: joint.dia.Paper;
   @Input() directed!: boolean;
+  @Input() weighted!: boolean;
   public defaultWeight!: number;
   private sourceEdgeNode: joint.dia.Element | null = null;
   private isEdgeCreationMode: boolean = false;
@@ -63,18 +64,8 @@ export class EdgesConnectionComponent {
     });
     link.source(source);
     link.target(target);
-    this.updateLinkStyle(link);
     link.attr('weight', this.defaultWeight);
-
-    link.labels([{
-      position: 0.5,
-      attrs: {
-        text: {
-          text: this.defaultWeight.toString(),
-          fill: 'black'
-        }
-      }
-    }]);
+    this.updateLinkStyle(link);
 
     link.addTo(this.graph);
 
@@ -92,6 +83,21 @@ export class EdgesConnectionComponent {
         targetMarker: this.directed ? { type: 'path' } : { type: 'none' }
       }
     });
+
+    if (this.weighted) {
+      link.labels([{
+        position: 0.5,
+        attrs: {
+          text: {
+            text: link.attr('weight').toString(),
+            fill: 'black'
+          }
+        }
+      }]);
+    }
+    else {
+      link.labels([]);
+    }
   }
 
   private offsetParallelLinks(

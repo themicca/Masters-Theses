@@ -25,6 +25,7 @@ export class GraphEditorComponent implements AfterViewInit {
   private nodeRadius: number = 80;
   public lastClickedElement: joint.dia.Element | joint.dia.Link | null = null;
   protected directed: boolean = true;
+  protected weighted: boolean = true;
   protected startNode: joint.dia.Element | null = null;
   protected endNode: joint.dia.Element | null = null;
   private tooltipElement!: HTMLElement;
@@ -101,14 +102,19 @@ export class GraphEditorComponent implements AfterViewInit {
     });
 
     this.paper.on('element:mouseenter', (elementView: any) => {
-      elementView.model.attr('body/filter', {
-        name: 'brightness',
-        args: { amount: 0.5 }
-      });
+      this.selectionComponent.highlightNode(elementView.model);
     });
 
     this.paper.on('element:mouseleave', (elementView: any) => {
-      elementView.model.removeAttr('body/filter');
+      this.selectionComponent.unhighlightNode(elementView.model);
+    });
+
+    this.paper.on('link:mouseenter', (linkView: any) => {
+      this.selectionComponent.highlightLink(linkView.model);
+    });
+
+    this.paper.on('link:mouseleave', (linkView: any) => {
+      this.selectionComponent.unhighlightLink(linkView.model);
     });
 
     this.paper.on('element:pointerdown', (_, evt, x, y) => {
@@ -243,7 +249,7 @@ export class GraphEditorComponent implements AfterViewInit {
   }
 
   promptEdgeWeight(): void {
-    this.edgeWeightComponent.promptEdgeWeight(this.graphContainer, this.lastClickedElement, this.paper, this.defaultWeight);
+    this.edgeWeightComponent.promptEdgeWeight(this.graphContainer, this.lastClickedElement, this.paper, this.defaultWeight, this.edgesConnectionComponent);
   }
 
   deleteSelected() {
@@ -362,9 +368,20 @@ export class GraphEditorComponent implements AfterViewInit {
       });
     }
 
-
     setTimeout(() => {
       this.graph.getLinks().forEach(link => {
+        this.edgesConnectionComponent.updateLinkStyle(link);
+      });
+    });
+  }
+
+  toggleWeighted(): void {
+    this.weighted = !this.weighted;
+    console.log(`Graph is now ${this.weighted ? 'Weighted' : 'Unweighted'}`);
+    // Update each edge style to reflect the current weighted state.
+    setTimeout(() => {
+      this.graph.getLinks().forEach(link => {
+        // Assume updateLinkStyle now takes the weighted flag into account.
         this.edgesConnectionComponent.updateLinkStyle(link);
       });
     });
@@ -386,7 +403,7 @@ export class GraphEditorComponent implements AfterViewInit {
     const input = document.createElement('input');
     input.type = 'text';
     input.value = currentLabel;
-    input.style.position = 'fixed';
+    input.style.position = 'absolute';
     input.style.left = paperPoint.x + 'px';
     input.style.top = paperPoint.y + 'px';
     input.style.width = bbox.width + 'px';

@@ -9,4 +9,5 @@ export interface GraphRequest {
   src: string | null;
   target: string | null;
   isDirected: boolean;
+  isWeighted: boolean;
 }

@@ -12,7 +12,7 @@ namespace BachelorProject.Server.Helpers
         private readonly Dictionary<string, string> edgeColors;
         private readonly Dictionary<string, string> edgeLookup;
         private readonly Dictionary<string, int?> currentEdgeWeights;
-        int currentTotalWeight = 0;
+        int? currentTotalWeight = null;
 
         public List<StepState> Steps { get; private set; }
 
@@ -29,7 +29,7 @@ namespace BachelorProject.Server.Helpers
             foreach (var node in nodes)
             {
                 string nodeId = node.Id.ToString();
-                nodeColors[nodeId] = Constants.ColorBase;
+                nodeColors[nodeId] = Constants.ColorBaseNode;
             }
 
             foreach (var edge in edges)
@@ -41,7 +41,7 @@ namespace BachelorProject.Server.Helpers
                 if (!edgeLookup.ContainsKey(lookupKey))
                 {
                     edgeLookup[lookupKey] = edgeId;
-                    edgeColors[edgeId] = Constants.ColorBase;
+                    edgeColors[edgeId] = Constants.ColorBaseEdge;
                     currentEdgeWeights[edgeId] = null;
                 }
                 if (!graph.IsDirected)
@@ -72,17 +72,6 @@ namespace BachelorProject.Server.Helpers
 
             if (nodeColors.ContainsKey(nodeId))
                 nodeColors[nodeId] = color;
-
-            Steps.Add(TakeSnapshot());
-        }
-
-        public void ColorEdge(string fromId, string toId, string color)
-        {
-            string lookupKey = $"{fromId}->{toId}";
-            if (edgeLookup.TryGetValue(lookupKey, out string edgeId))
-            {
-                edgeColors[edgeId] = color;
-            }
 
             Steps.Add(TakeSnapshot());
         }

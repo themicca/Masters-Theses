@@ -1,4 +1,5 @@
 import { Component, ElementRef } from '@angular/core';
+import { EdgesConnectionComponent } from '../edges-connection/edges-connection.component';
 
 @Component({
   selector: 'app-edge-weight',
@@ -10,7 +11,13 @@ export class EdgeWeightComponent {
   private readonly MIN_WEIGHT = -2147483648;
   private readonly MAX_WEIGHT = 2147483647;
 
-  promptEdgeWeight(graphContainer: ElementRef, lastClickedElement: joint.dia.Element | joint.dia.Link | null = null, paper: joint.dia.Paper, defaultWeight: number): void {
+  promptEdgeWeight(graphContainer: ElementRef,
+    lastClickedElement: joint.dia.Element | joint.dia.Link | null = null,
+    paper: joint.dia.Paper,
+    defaultWeight: number,
+    edgeConnectionComponent: EdgesConnectionComponent
+  ): void
+  {
     const edge = lastClickedElement as joint.dia.Link;
     
     const linkView = paper.findViewByModel(edge) as joint.dia.LinkView;
@@ -57,12 +64,7 @@ export class EdgeWeightComponent {
         this.shakeElement(inputField);
       } else {
         edge.attr('weight', rawValue);
-        edge.labels([
-          {
-            position: 0.5,
-            attrs: { text: { text: rawValue.toString(), fill: 'black' } }
-          }
-        ]);
+        edgeConnectionComponent.updateLinkStyle(edge);
         this.removeWeightInputBox();
       }
     };

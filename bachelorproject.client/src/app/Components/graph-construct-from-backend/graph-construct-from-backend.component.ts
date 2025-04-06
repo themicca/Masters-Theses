@@ -80,7 +80,7 @@ export class GraphConstructFromBackendComponent {
       });
       
       graphRequest.edges.forEach(edgeObj => {
-        const color = step.edgeColors[edgeObj.id] || 'blue';
+        const color = step.edgeColors[edgeObj.id] || 'black';
         const sourceEl = nodeMap.get(edgeObj.sourceNodeId);
         const targetEl = nodeMap.get(edgeObj.targetNodeId);
         if (!sourceEl || !targetEl) return;
@@ -94,12 +94,14 @@ export class GraphConstructFromBackendComponent {
         const link = new joint.shapes.standard.Link();
         link.source(sourceEl);
         link.target(targetEl);
-        link.labels([{
-          position: 0.5,
-          attrs: {
-            text: { text: labelText, fill: 'black' }
-          }
-        }]);
+        if (graphRequest.isWeighted) {
+          link.labels([{
+            position: 0.5,
+            attrs: {
+              text: { text: labelText, fill: 'black' }
+            }
+          }]);
+        }
         link.attr({
           line: {
             stroke: color,
@@ -166,12 +168,14 @@ export class GraphConstructFromBackendComponent {
       const link = new joint.shapes.standard.Link();
       link.source(sourceEl);
       link.target(targetEl);
-      link.labels([{
-        position: 0.5,
-        attrs: {
-          text: { text: edgeObj.weight.toString(), fill: 'black' }
-        }
-      }]);
+      if (graphRequest.isWeighted) {
+        link.labels([{
+          position: 0.5,
+          attrs: {
+            text: { text: edgeObj.weight.toString(), fill: 'black' }
+          }
+        }]);
+      }
       link.attr({
         line: {
           stroke: 'black',

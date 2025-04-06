@@ -74,7 +74,7 @@ namespace BachelorProject.Server.GraphAlgorithms.MinimumTree
                     mstEdges.Add(edge);
                     Union(parent, root1, root2);
 
-                    snapshot.ColorEdge(edge.From, edge.To, Constants.ColorProcessed);
+                    snapshot.ColorEdge(edge.From, edge.To, Constants.ColorResult);
                 }
                 else
                 {

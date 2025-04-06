@@ -189,50 +189,21 @@ export class GraphSelectionComponent {
   }
   
   private applyHoverFilter(cell: joint.dia.Cell): void {
-    const cellView = this.paper.findViewByModel(cell);
-    if (!cellView) return;
-
-    cellView.highlight(null, {
-      highlighter: {
-        name: 'stroke',
-        options: {
-          padding: 0,
-          rx: 65,
-          ry: 65,
-          attrs: {
-            'stroke': 'darkorange',
-            'stroke-width': 3,
-            'stroke-dasharray': '0'
-          }
-        }
-      }
-    });
-    cell.attr('body/filter', {
-      name: 'brightness',
-      args: { amount: 0.7 }
-    });
+    if (cell.isElement()) {
+      this.highlightNode(cell);
+    }
+    else if (cell.isLink()) {
+      this.highlightLink(cell);
+    }
   }
 
   private removeHoverFilter(cell: joint.dia.Cell) {
-    const cellView = this.paper.findViewByModel(cell);
-    if (!cellView) return;
-
-    cellView.unhighlight(null, {
-      highlighter: {
-        name: 'stroke',
-        options: {
-          padding: 0,
-          rx: 65,
-          ry: 65,
-          attrs: {
-            'stroke': 'darkorange',
-            'stroke-width': 3,
-            'stroke-dasharray': '0'
-          }
-        }
-      }
-    });
-    cell.removeAttr('body/filter');
+    if (cell.isElement()) {
+      this.unhighlightNode(cell);
+    }
+    else if (cell.isLink()) {
+      this.unhighlightLink(cell);
+    }
   }
 
   private destroyMarquee() {
@@ -246,8 +217,8 @@ export class GraphSelectionComponent {
     this.clearSelection();
     
     this.currentHoverSet.forEach(cell => {
-      this.selectItem(cell);
       this.removeHoverFilter(cell);
+      this.selectItem(cell);
     });
     
     this.currentHoverSet.clear();
@@ -255,24 +226,27 @@ export class GraphSelectionComponent {
   
   private selectItem(cell: joint.dia.Cell) {
     if (cell.isElement()) {
+      this.unhighlightNode(cell);
       this.selectedElements.push(cell);
-      this.highlightNode(cell as joint.dia.Element);
+      this.selectNode(cell as joint.dia.Element);
     }
     if (cell.isLink()) {
+      this.unhighlightLink(cell);
       this.selectedElements.push(cell);
-      this.highlightLink(cell as joint.dia.Link);
+      this.selectLink(cell as joint.dia.Link);
     }
   }
 
   private clearSelection() {
-    this.selectedElements.forEach(item => {
+    const selection = [...this.selectedElements];
+    this.selectedElements = [];
+    selection.forEach(item => {
       if (item.isElement()) {
         this.unhighlightNode(item as joint.dia.Element);
       } else if (item.isLink()) {
         this.unhighlightLink(item as joint.dia.Link);
       }
     });
-    this.selectedElements = [];
   }
 
   deleteSelected(startNode: joint.dia.Element | null, endNode: joint.dia.Element | null): { startNode: joint.dia.Element | null, endNode: joint.dia.Element | null } {
@@ -308,17 +282,28 @@ export class GraphSelectionComponent {
     return { startNode, endNode }
   }
 
-  private highlightNode(node: joint.dia.Element): void {
+  private selectNode(node: joint.dia.Element): void {
     node.attr('body/stroke', 'red');
     node.attr('body/strokeWidth', 3);
   }
 
-  private unhighlightNode(node: joint.dia.Element): void {
-    node.attr('body/stroke', '#2980b9');
-    node.attr('body/strokeWidth', 2);
+  public highlightNode(node: joint.dia.Element): void {
+    node.attr('body/stroke', 'darkorange');
+    node.attr('body/strokeWidth', 3);
   }
 
-  private highlightLink(link: joint.dia.Link): void {
+  public unhighlightNode(node: joint.dia.Element): void {
+    if (this.selectedElements.includes(node)) {
+      node.attr('body/stroke', 'red');
+      node.attr('body/strokeWidth', 3);
+    }
+    else {
+      node.attr('body/stroke', '#2980b9');
+      node.attr('body/strokeWidth', 2);
+    }
+  }
+
+  private selectLink(link: joint.dia.Link): void {
     link.attr({
       line: {
         stroke: 'red',
@@ -327,12 +312,31 @@ export class GraphSelectionComponent {
     });
   }
 
-  private unhighlightLink(link: joint.dia.Link): void {
+  public highlightLink(link: joint.dia.Link): void {
     link.attr({
       line: {
-        stroke: '#2c3e50',
+        stroke: 'darkorange',
         strokeWidth: 3
       }
     });
+  }
+
+  public unhighlightLink(link: joint.dia.Link): void {
+    if (this.selectedElements.includes(link)) {
+      link.attr({
+        line: {
+          stroke: 'red',
+          strokeWidth: 3
+        }
+      });
+    }
+    else {
+      link.attr({
+        line: {
+          stroke: '#2c3e50',
+          strokeWidth: 3
+        }
+      });
+    }
   }
 }

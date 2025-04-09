@@ -19,7 +19,6 @@ export class EdgesConnectionComponent {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['paper'] && this.paper) {
-      console.log('Paper received, setting up listeners...');
       this.setupListeners();
     }
   }

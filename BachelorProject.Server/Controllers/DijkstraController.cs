@@ -16,7 +16,7 @@ namespace BachelorProject.Server.Controllers
         {
             try
             {
-                GraphStepDto result = DijkstraAlgo.SolveGraph(request);
+                GraphStepDto result = await Task.Run(() => DijkstraAlgo.SolveGraph(request));
                 return Ok(result);
             }
             catch (Exception ex)

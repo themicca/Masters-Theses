@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy } from '@angular/core';
+import { Component, ElementRef, Input, OnDestroy, ViewChild } from '@angular/core';
 import { GraphRequest } from '../../models/graph-request.model';
 import { GraphService } from '../../services/graph.service';
 import { Subscription } from 'rxjs';
@@ -14,6 +14,15 @@ import { GraghStepsResult } from '../../models/graph-steps-result.model';
   styleUrl: './graph-submit.component.css'
 })
 export class GraphSubmitComponent implements OnDestroy {
+  @ViewChild('buttonDijkstra', { static: false }) buttonDijkstra!: ElementRef;
+  @ViewChild('buttonKruskal', { static: false }) buttonKruskal!: ElementRef;
+  @ViewChild('buttonEdmondsKarp', { static: false }) buttonEdmondsKarp!: ElementRef;
+  @ViewChild('buttonFleury', { static: false }) buttonFleury!: ElementRef;
+  @ViewChild('buttonHeldKarp', { static: false }) buttonHeldKarp!: ElementRef;
+  @ViewChild('buttonGreedyMatching', { static: false }) buttonGreedyMatching!: ElementRef;
+  @ViewChild('buttonGreedyColoring', { static: false }) buttonGreedyColoring!: ElementRef;
+  @ViewChild('buttonWelshPowell', { static: false }) buttonWelshPowell!: ElementRef;
+
   @Input() graph!: joint.dia.Graph;
   @Input() graphSrc: joint.dia.Element | null = null;
   @Input() graphTarget: joint.dia.Element | null = null;

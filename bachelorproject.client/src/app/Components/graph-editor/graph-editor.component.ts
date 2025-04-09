@@ -4,6 +4,9 @@ import { GraphSelectionComponent } from '../graph-selection/graph-selection.comp
 import { EdgeWeightComponent } from '../edge-weight/edge-weight.component';
 import { EdgesConnectionComponent } from '../edges-connection/edges-connection.component';
 import { v4 as uuidv4 } from 'uuid';
+import { RenameNodesComponent } from '../rename-nodes/rename-nodes.component';
+import { GraphSubmitComponent } from '../graph-submit/graph-submit.component';
+import { TooltipComponent } from '../tooltip/tooltip.component';
 
 @Component({
   selector: 'app-graph-editor',
@@ -14,11 +17,18 @@ export class GraphEditorComponent implements AfterViewInit {
   @ViewChild('graphContainer', { static: false }) graphContainer!: ElementRef;
   @ViewChild('sampleNode', { static: false }) sampleNode!: ElementRef;
   @ViewChild('sampleEdge', { static: false }) sampleEdge!: ElementRef;
+  @ViewChild('directionalCheckbox', { static: false }) directionalCheckbox!: ElementRef;
+  @ViewChild('weightedCheckbox', { static: false }) weightedCheckbox!: ElementRef;
+  @ViewChild('tooltipCheckbox', { static: false }) tooltipCheckbox!: ElementRef;
   @ViewChild('nodeContextMenu', { static: false }) nodeContextMenu!: ElementRef;
   @ViewChild('edgeContextMenu', { static: false }) edgeContextMenu!: ElementRef;
+
   @ViewChild(GraphSelectionComponent) selectionComponent!: GraphSelectionComponent;
   @ViewChild(EdgeWeightComponent) edgeWeightComponent!: EdgeWeightComponent;
   @ViewChild(EdgesConnectionComponent) edgesConnectionComponent!: EdgesConnectionComponent;
+  @ViewChild(RenameNodesComponent) renameNodesComponent!: RenameNodesComponent;
+  @ViewChild(GraphSubmitComponent) graphSubmitComponent!: GraphSubmitComponent
+  @ViewChild(TooltipComponent) tooltipComponent!: TooltipComponent;
 
   protected graph!: joint.dia.Graph;
   protected paper!: joint.dia.Paper;
@@ -26,9 +36,9 @@ export class GraphEditorComponent implements AfterViewInit {
   public lastClickedElement: joint.dia.Element | joint.dia.Link | null = null;
   protected directed: boolean = true;
   protected weighted: boolean = true;
+  protected showTooltip: boolean = true;
   protected startNode: joint.dia.Element | null = null;
   protected endNode: joint.dia.Element | null = null;
-  private tooltipElement!: HTMLElement;
   private readonly defaultWeight = 1;
 
   constructor() { }
@@ -37,10 +47,10 @@ export class GraphEditorComponent implements AfterViewInit {
     setTimeout(() => {
       this.initGraph();
       this.addListeners();
-      this.initTooltips();
     });
     this.enableDragging();
     this.initEdgeCreation();
+    this.setTooltip();
   }
 
   private initGraph(): void {
@@ -98,6 +108,9 @@ export class GraphEditorComponent implements AfterViewInit {
     document.addEventListener('keydown', (event: KeyboardEvent) => {
       if (event.key === 'Delete') {
         this.deleteSelected();
+      }
+      if (event.key === 'Escape') {
+        this.hideAllContextMenus();
       }
     });
 
@@ -177,57 +190,29 @@ export class GraphEditorComponent implements AfterViewInit {
         link.vertices(newVerts);
       });
     });
-
-    this.paper.on('element:pointerup', (elementView: any, evt) => {
-      if (evt.detail === 2) {
-        this.inlineEditNodeLabel(elementView.model as joint.dia.Element);
-      }
-    });
   }
 
-  private initTooltips(): void {
-    this.tooltipElement = document.createElement('div');
-    this.tooltipElement.className = 'graph-tooltip';
-    this.tooltipElement.style.display = 'none';
-    this.tooltipElement.style.position = 'fixed';
-    this.tooltipElement.style.backgroundColor = '#fff';
-    this.tooltipElement.style.color = '#333';
-    this.tooltipElement.style.border = '1px solid #ccc';
-    this.tooltipElement.style.borderRadius = '4px';
-    this.tooltipElement.style.padding = '8px 12px';
-    this.tooltipElement.style.fontSize = '14px';
-    this.tooltipElement.style.fontFamily = 'Arial, sans-serif';
-    this.tooltipElement.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.15)';
-    this.tooltipElement.style.zIndex = '999999';
-    document.body.appendChild(this.tooltipElement);
-    
-    const sampleNodeEl = this.sampleNode.nativeElement as HTMLElement;
-    sampleNodeEl.addEventListener('mouseenter', (event: MouseEvent) => {
-      this.tooltipElement.innerText = 'Drag this to the paper to make a node';
-      this.tooltipElement.style.display = 'block';
-    });
-    sampleNodeEl.addEventListener('mouseleave', () => {
-      this.tooltipElement.style.display = 'none';
-    });
-    sampleNodeEl.addEventListener('mousemove', (event: MouseEvent) => {
-      this.tooltipElement.style.left = event.clientX + 10 + 'px';
-      this.tooltipElement.style.top = event.clientY + 10 + 'px';
-    });
-    
-    const sampleEdgeEl = this.sampleEdge.nativeElement as HTMLElement;
-    sampleEdgeEl.addEventListener('mouseenter', (event: MouseEvent) => {
-      this.tooltipElement.innerText = 'Click this to create an edge';
-      this.tooltipElement.style.display = 'block';
-    });
-    sampleEdgeEl.addEventListener('mouseleave', () => {
-      this.tooltipElement.style.display = 'none';
-    });
-    sampleEdgeEl.addEventListener('mousemove', (event: MouseEvent) => {
-      this.tooltipElement.style.left = event.clientX + 10 + 'px';
-      this.tooltipElement.style.top = event.clientY + 10 + 'px';
-    });
+  private setTooltip() {
+    this.tooltipComponent.buttonDijkstra = this.graphSubmitComponent.buttonDijkstra.nativeElement;
+    this.tooltipComponent.buttonKruskal = this.graphSubmitComponent.buttonKruskal.nativeElement;
+    this.tooltipComponent.buttonEdmondsKarp = this.graphSubmitComponent.buttonEdmondsKarp.nativeElement;
+    this.tooltipComponent.buttonFleury = this.graphSubmitComponent.buttonFleury.nativeElement;
+    this.tooltipComponent.buttonHeldKarp = this.graphSubmitComponent.buttonHeldKarp.nativeElement;
+    this.tooltipComponent.buttonGreedyMatching = this.graphSubmitComponent.buttonGreedyMatching.nativeElement;
+    this.tooltipComponent.buttonGreedyColoring = this.graphSubmitComponent.buttonGreedyColoring.nativeElement;
+    this.tooltipComponent.buttonWelshPowell = this.graphSubmitComponent.buttonWelshPowell.nativeElement;
   }
 
+  showTooltips() {
+    this.showTooltip = !this.showTooltip;
+    if (this.showTooltip) {;
+      this.tooltipComponent.enableAllTooltips();
+    }
+    else {
+      this.tooltipComponent.disableAllTooltips();
+    }
+  }
+  
   private showContextMenu(x: number, y: number, type: 'node' | 'edge'): void {
     this.hideAllContextMenus();
 
@@ -386,56 +371,12 @@ export class GraphEditorComponent implements AfterViewInit {
       });
     });
   }
-
+  
   renameNode(): void {
     const node = this.lastClickedElement as joint.dia.Element;
     if (!node) return;
 
-    this.inlineEditNodeLabel(node);
-  }
-
-  private inlineEditNodeLabel(node: joint.dia.Element): void {
-    let currentLabel = node.attr('label/data-plain-text') || '';
-
-    const bbox = node.getBBox();
-    const paperPoint = this.paper.localToPagePoint({ x: bbox.x, y: bbox.y });
-    
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.value = currentLabel;
-    input.style.position = 'absolute';
-    input.style.left = paperPoint.x + 'px';
-    input.style.top = paperPoint.y + 'px';
-    input.style.width = bbox.width + 'px';
-    input.style.fontSize = '14px';
-    input.style.zIndex = '999';
-
-    document.body.appendChild(input);
-    input.focus();
-    
-    const finishEditing = () => {
-      let newLabel = input.value.trim() || currentLabel;
-
-      node.attr('label/data-plain-text', newLabel);
-
-      if (node === this.startNode)
-        node.attr('label/text', `(S) ${newLabel}`);
-      else if (node === this.endNode)
-        node.attr('label/text', `(X) ${newLabel}`);
-      else {
-        node.attr('label/text', newLabel);
-      }
-
-      document.body.removeChild(input);
-    };
-    
-    input.addEventListener('blur', finishEditing);
-    
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        finishEditing();
-      }
-    });
+    this.renameNodesComponent.inlineEditNodeLabel(node);
   }
 
   private initEdgeCreation(): void {

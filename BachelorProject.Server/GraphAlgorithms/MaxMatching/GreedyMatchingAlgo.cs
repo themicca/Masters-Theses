@@ -58,7 +58,8 @@ namespace BachelorProject.Server.GraphAlgorithms.MaxMatching
             ResultGraphDto resultGraph = new ResultGraphDto
             {
                 NodeIds = nodeIds,
-                EdgeIds = matchingEdgeIds.ToArray()
+                EdgeIds = matchingEdgeIds.ToArray(),
+                GraphType = Constants.GraphTypes.GreedyMatching
             };
 
             GraphStepDto resultDto = new GraphStepDto

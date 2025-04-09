@@ -7,7 +7,6 @@ namespace BachelorProject.Server.GraphAlgorithms.EdgeColoring
     {
         public static GraphStepDto SolveGraph(GraphDto graph)
         {
-            // Get an array of node IDs and build an index mapping.
             string[] nodeIds = GraphDtoConvertor.ToNodeIdArray(graph);
             int n = nodeIds.Length;
             Dictionary<string, int> nodeIndexMap = new Dictionary<string, int>();
@@ -16,45 +15,40 @@ namespace BachelorProject.Server.GraphAlgorithms.EdgeColoring
                 nodeIndexMap[nodeIds[i]] = i;
             }
 
-            // Use the converter to get an adjacency list representation.
-            // The keys are node IDs, and the values are lists of (neighbor id, weight) pairs.
             var adjList = GraphDtoConvertor.ToAdjacencyList(graph);
 
-            // Compute maximum degree (Delta) using the adjacency list.
             int delta = adjList.Values.Max(list => list.Count);
             int maxColors = 2 * delta - 1;
+
             List<string> colorList = new List<string>();
-            for (int i = 1; i <= maxColors; i++)
+            for (int i = 0; i < maxColors; i++)
             {
-                colorList.Add("C" + i);
+                double hue = (360.0 * i) / maxColors;
+                string hexColor = ColorFromHSV(hue, 0.8, 0.8);
+                colorList.Add(hexColor);
             }
 
-            // Local dictionary to hold edge colors.
-            // Keys are in the form "i->j" (with i < j) representing an undirected edge.
             Dictionary<string, string> edgeColors = new Dictionary<string, string>();
             string GetEdgeKey(int u, int v) => u < v ? $"{u}->{v}" : $"{v}->{u}";
 
-            // Create a Snapshots instance using the full NodeDto and EdgeDto arrays.
             Snapshots snapshot = new Snapshots(graph);
 
-            // Process each edge in the graph via the adjacency list.
-            // To avoid duplicates in an undirected graph, we only process an edge if the source's index is less than the neighbor's.
             for (int i = 0; i < n; i++)
             {
                 string uId = nodeIds[i];
                 if (!adjList.ContainsKey(uId))
                     continue;
+
                 foreach (var (neighborId, weight) in adjList[uId])
                 {
                     int j = nodeIndexMap[neighborId];
                     if (i >= j)
-                        continue; // Process each undirected edge only once.
+                        continue;
 
                     string edgeKey = GetEdgeKey(i, j);
                     if (edgeColors.ContainsKey(edgeKey))
-                        continue; // Already colored.
+                        continue;
 
-                    // Collect colors used on edges incident to vertex i.
                     HashSet<string> usedColors = new HashSet<string>();
                     if (adjList.ContainsKey(uId))
                     {
@@ -66,7 +60,7 @@ namespace BachelorProject.Server.GraphAlgorithms.EdgeColoring
                                 usedColors.Add(edgeColors[key]);
                         }
                     }
-                    // And for vertex j.
+
                     string vId = nodeIds[j];
                     if (adjList.ContainsKey(vId))
                     {
@@ -79,30 +73,18 @@ namespace BachelorProject.Server.GraphAlgorithms.EdgeColoring
                         }
                     }
 
-                    // Choose the smallest available color that is not used.
                     string chosenColor = colorList.FirstOrDefault(c => !usedColors.Contains(c));
                     if (chosenColor == null)
                         chosenColor = colorList.Last();
 
-                    // Record the chosen color for this edge.
                     edgeColors[edgeKey] = chosenColor;
-                    // Update snapshot visualization (using node indices).
                     snapshot.ColorEdge(i, j, chosenColor);
                 }
             }
 
-            // Finalize node colors.
-            for (int i = 0; i < n; i++)
-            {
-                snapshot.ColorNode(i, Constants.ColorResult);
-            }
-
-            // Build the minimal result graph.
-            // For each processed edge, retrieve its original edge ID from the snapshot's lookup.
             List<string> resultEdgeIds = new List<string>();
             foreach (var kvp in edgeColors)
             {
-                // The key is "i->j". Parse indices.
                 var parts = kvp.Key.Split("->");
                 int u = int.Parse(parts[0]);
                 int v = int.Parse(parts[1]);
@@ -113,10 +95,10 @@ namespace BachelorProject.Server.GraphAlgorithms.EdgeColoring
             ResultGraphDto resultGraph = new ResultGraphDto
             {
                 NodeIds = nodeIds,
-                EdgeIds = resultEdgeIds.ToArray()
+                EdgeIds = resultEdgeIds.ToArray(),
+                GraphType = Constants.GraphTypes.GreedyColoring
             };
 
-            // Return the step DTO with snapshots and the minimal result graph.
             GraphStepDto stepDto = new GraphStepDto
             {
                 Steps = snapshot.Steps,
@@ -124,6 +106,56 @@ namespace BachelorProject.Server.GraphAlgorithms.EdgeColoring
             };
 
             return stepDto;
+        }
+
+        private static string ColorFromHSV(double hue, double saturation, double value)
+        {
+            double c = value * saturation;
+            double x = c * (1 - Math.Abs((hue / 60.0) % 2 - 1));
+            double m = value - c;
+            double r_prime, g_prime, b_prime;
+
+            if (hue < 60)
+            {
+                r_prime = c;
+                g_prime = x;
+                b_prime = 0;
+            }
+            else if (hue < 120)
+            {
+                r_prime = x;
+                g_prime = c;
+                b_prime = 0;
+            }
+            else if (hue < 180)
+            {
+                r_prime = 0;
+                g_prime = c;
+                b_prime = x;
+            }
+            else if (hue < 240)
+            {
+                r_prime = 0;
+                g_prime = x;
+                b_prime = c;
+            }
+            else if (hue < 300)
+            {
+                r_prime = x;
+                g_prime = 0;
+                b_prime = c;
+            }
+            else
+            {
+                r_prime = c;
+                g_prime = 0;
+                b_prime = x;
+            }
+
+            int r = (int)Math.Round((r_prime + m) * 255);
+            int g = (int)Math.Round((g_prime + m) * 255);
+            int b = (int)Math.Round((b_prime + m) * 255);
+            return $"#{r:X2}{g:X2}{b:X2}";
         }
     }
 }

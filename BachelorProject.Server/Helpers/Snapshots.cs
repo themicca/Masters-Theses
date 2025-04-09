@@ -11,7 +11,7 @@ namespace BachelorProject.Server.Helpers
         private readonly Dictionary<string, string> nodeColors;
         private readonly Dictionary<string, string> edgeColors;
         private readonly Dictionary<string, string> edgeLookup;
-        private readonly Dictionary<string, int?> currentEdgeWeights;
+        public Dictionary<string, int?> CurrentEdgeWeights { get; private set; }
         int? currentTotalWeight = null;
 
         public List<StepState> Steps { get; private set; }
@@ -24,7 +24,7 @@ namespace BachelorProject.Server.Helpers
             nodeColors = new Dictionary<string, string>();
             edgeColors = new Dictionary<string, string>();
             edgeLookup = new Dictionary<string, string>();
-            currentEdgeWeights = new Dictionary<string, int?>();
+            CurrentEdgeWeights = new Dictionary<string, int?>();
 
             foreach (var node in nodes)
             {
@@ -42,7 +42,7 @@ namespace BachelorProject.Server.Helpers
                 {
                     edgeLookup[lookupKey] = edgeId;
                     edgeColors[edgeId] = Constants.ColorBaseEdge;
-                    currentEdgeWeights[edgeId] = null;
+                    CurrentEdgeWeights[edgeId] = null;
                 }
                 if (!graph.IsDirected)
                 {
@@ -72,6 +72,17 @@ namespace BachelorProject.Server.Helpers
 
             if (nodeColors.ContainsKey(nodeId))
                 nodeColors[nodeId] = color;
+
+            Steps.Add(TakeSnapshot());
+        }
+
+        public void ColorEdge(string fromId, string toId, string color)
+        {
+            string lookupKey = $"{fromId}->{toId}";
+            if (edgeLookup.TryGetValue(lookupKey, out string edgeId))
+            {
+                edgeColors[edgeId] = color;
+            }
 
             Steps.Add(TakeSnapshot());
         }
@@ -107,7 +118,7 @@ namespace BachelorProject.Server.Helpers
             if (edgeLookup.TryGetValue(lookupKey, out string edgeId))
             {
                 edgeColors[edgeId] = color;
-                currentEdgeWeights[edgeId] = currentEdgeWeight;
+                CurrentEdgeWeights[edgeId] = currentEdgeWeight;
             }
 
             Steps.Add(TakeSnapshot());
@@ -126,7 +137,7 @@ namespace BachelorProject.Server.Helpers
             {
                 NodeColors = new Dictionary<string, string>(nodeColors),
                 EdgeColors = new Dictionary<string, string>(edgeColors),
-                EdgeCurrentWeights = new Dictionary<string, int?>(currentEdgeWeights),
+                EdgeCurrentWeights = new Dictionary<string, int?>(CurrentEdgeWeights),
                 CurrentTotalWeight = currentTotalWeight
             };
 

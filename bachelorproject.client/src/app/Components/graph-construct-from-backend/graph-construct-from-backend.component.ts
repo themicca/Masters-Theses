@@ -14,6 +14,7 @@ export class GraphConstructFromBackendComponent {
   @ViewChild('resultContainer', { static: false }) resultContainer!: ElementRef;
   @ViewChild('resultTextDiv', { static: false }) resultTextDiv!: ElementRef;
   @ViewChild('stepsContainer', { static: false }) stepsContainer!: ElementRef;
+  @ViewChild('resultText', { static: false }) resultText!: ElementRef;
 
   constructor(private graphResponseDataService: GraphResponseDataService) { }
 
@@ -22,25 +23,30 @@ export class GraphConstructFromBackendComponent {
       if (data) {
         const { response, graphData: graphRequest } = data;
         console.log('Graph data arrived in Reconstructor:', data);
-        
-        this.buildStepPapers(response.steps, graphRequest);
-        this.reconstructGraph(response.resultGraph, graphRequest);
+
+        this.buildStepPapers(response.steps, graphRequest, response.resultGraph.graphType);
+        this.reconstructGraph(response.resultGraph, graphRequest, response.steps[response.steps.length - 1]);
       }
     });
   }
 
-  private buildStepPapers(steps: StepState[], graphRequest: GraphRequest) {
+  private buildStepPapers(steps: StepState[], graphRequest: GraphRequest, graphType: string) {
     this.stepsContainer.nativeElement.innerHTML = '';
 
     steps.forEach((step, index) => {
       const stepWrapper = document.createElement('div');
       stepWrapper.classList.add('step-wrapper');
-      stepWrapper.innerHTML = `<h3>Step ${index + 1}</h3>`;
+      stepWrapper.innerHTML = `<h3>${graphType} Step ${index + 1}</h3>`;
       this.stepsContainer.nativeElement.appendChild(stepWrapper);
       
       if (step.currentTotalWeight != null) {
+        let innerText = `Current Total Weight: ${step.currentTotalWeight}`;
+        if (graphType == "Edmonds-Karp") {
+          innerText = `Current Total Flow: ${step.currentTotalWeight}`;
+        }
+
         const totalWeightDiv = document.createElement('div');
-        totalWeightDiv.innerText = `Current Total Weight: ${step.currentTotalWeight}`;
+        totalWeightDiv.innerText = innerText;
         totalWeightDiv.style.fontWeight = 'bold';
         totalWeightDiv.style.marginBottom = '5px';
         stepWrapper.appendChild(totalWeightDiv);
@@ -114,13 +120,20 @@ export class GraphConstructFromBackendComponent {
     });
   }
 
-  private reconstructGraph(resultGraph: GraphResult, graphRequest: GraphRequest) {
+  private reconstructGraph(resultGraph: GraphResult, graphRequest: GraphRequest, lastStep: StepState) {
     this.resultTextDiv.nativeElement.innerHTML = '';
     this.resultContainer.nativeElement.innerHTML = '';
 
+    this.resultText.nativeElement.innerText = `${resultGraph.graphType} Result`;
+
     if (resultGraph.totalWeight != null) {
+      let innerText = `Total Weight: ${resultGraph.totalWeight}`;
+      if (resultGraph.graphType == "Edmonds-Karp") {
+        innerText = `Total Flow: ${resultGraph.totalWeight}`;
+      }
+
       const totalWeightHeader = document.createElement('div');
-      totalWeightHeader.innerText = `Total Weight: ${resultGraph.totalWeight}`;
+      totalWeightHeader.innerText = innerText;
       totalWeightHeader.style.fontWeight = 'bold';
       totalWeightHeader.style.marginBottom = '10px';
       this.resultTextDiv.nativeElement.appendChild(totalWeightHeader);
@@ -151,7 +164,7 @@ export class GraphConstructFromBackendComponent {
       circle.position(nodeObj.x, nodeObj.y);
       circle.resize(80, 80);
       circle.attr({
-        body: { fill: '#3498db', stroke: '#2980b9', strokeWidth: 2 },
+        body: { fill: resultGraph.graphType == "Welsh-Powell" ? lastStep.edgeColors[nodeId] : '#3498db', stroke: '#2980b9', strokeWidth: 2 },
         label: { text: nodeObj.label, fill: '#ffffff', fontSize: 14 }
       });
       circle.addTo(graph);
@@ -165,6 +178,12 @@ export class GraphConstructFromBackendComponent {
       const targetEl = nodeMap.get(edgeObj.targetNodeId);
       if (!sourceEl || !targetEl) return;
 
+      const originalWeight = edgeObj.weight;
+      let labelText = originalWeight.toString();
+      if (resultGraph.edgeResultWeights && resultGraph.edgeResultWeights[edgeObj.id] != null) {
+        labelText = `${resultGraph.edgeResultWeights[edgeObj.id]}/${originalWeight}`;
+      }
+
       const link = new joint.shapes.standard.Link();
       link.source(sourceEl);
       link.target(targetEl);
@@ -172,13 +191,13 @@ export class GraphConstructFromBackendComponent {
         link.labels([{
           position: 0.5,
           attrs: {
-            text: { text: edgeObj.weight.toString(), fill: 'black' }
+            text: { text: labelText, fill: 'black' }
           }
         }]);
       }
       link.attr({
         line: {
-          stroke: 'black',
+          stroke: resultGraph.graphType == "Greedy Coloring" ? lastStep.edgeColors[edgeId] : 'black',
           strokeWidth: 3,
           targetMarker: graphRequest.isDirected ? { type: 'path' } : { type: 'none' }
         }

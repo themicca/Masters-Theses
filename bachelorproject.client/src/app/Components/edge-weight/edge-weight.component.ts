@@ -84,8 +84,8 @@ export class EdgeWeightComponent {
 
     setTimeout(() => {
       document.addEventListener('pointerdown', this.handleOutsideClick);
-      document.addEventListener('keydown', this.handleEnterKey);
-    }, 10);
+      document.addEventListener('keydown', this.handleKeyEvents);
+    });
 
     this.injectShakeStyles();
   }
@@ -116,7 +116,7 @@ export class EdgeWeightComponent {
     el.classList.add('shake');
   }
 
-  private handleEnterKey = (e: KeyboardEvent): void => {
+  private handleKeyEvents = (e: KeyboardEvent): void => {
     if (e.key === 'Enter') {
       if (this.weightInputBox) {
         const btn = this.weightInputBox.querySelector('button');
@@ -124,6 +124,9 @@ export class EdgeWeightComponent {
           (btn as HTMLButtonElement).click();
         }
       }
+    }
+    else if (e.key === 'Escape') {
+      this.removeWeightInputBox();
     }
   };
 

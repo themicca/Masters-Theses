@@ -7,18 +7,14 @@ namespace BachelorProject.Server.GraphAlgorithms.EulerianGraph
     {
         public static GraphStepDto SolveGraph(GraphDto graph)
         {
-            // Use the convertor to obtain the node ID array and the adjacency matrix.
             string[] nodes = GraphDtoConvertor.ToNodeIdArray(graph);
             int[][] matrix = GraphDtoConvertor.ToAdjacencyMatrix(graph);
             bool directed = graph.IsDirected;
-            string src = graph.Src?.ToString() ?? throw new ArgumentException("Source not provided.");
+            string src = graph.Src?.ToString()!;
 
             int nodesCount = nodes.Length;
             int startIndex = Array.IndexOf(nodes, src);
-            if (startIndex == -1)
-                throw new ArgumentException("Source node not found in node list.");
 
-            // Connectivity check: treat the graph as undirected.
             bool[] visited = new bool[nodesCount];
             DFSUtil(startIndex, matrix, visited, nodesCount, false);
             for (int i = 0; i < nodesCount; i++)
@@ -33,7 +29,6 @@ namespace BachelorProject.Server.GraphAlgorithms.EulerianGraph
                     throw new InvalidOperationException("Graph is not connected.");
             }
 
-            // Create a working copy of the adjacency matrix.
             int[][] tempEdges = new int[nodesCount][];
             for (int i = 0; i < nodesCount; i++)
             {
@@ -44,36 +39,43 @@ namespace BachelorProject.Server.GraphAlgorithms.EulerianGraph
                 }
             }
 
-            // Create a Snapshots instance for visualization.
             Snapshots snapshot = new Snapshots(graph);
 
-            // Run Fleury’s algorithm to get the Eulerian path (stored as indices).
             List<int> eulerPath = new List<int>();
             FleuryUtil(startIndex, tempEdges, eulerPath, nodesCount, snapshot, nodes, directed);
             eulerPath.Reverse();
 
-            // Convert indices to node IDs.
             List<string> path = eulerPath.Select(index => nodes[index]).ToList();
 
-            // Mark all nodes in the path as final.
-            foreach (int idx in eulerPath)
-            {
-                snapshot.ColorNode(idx, Constants.ColorResult);
-            }
+            HashSet<int> visitedNodes = new HashSet<int>();
+            startIndex = eulerPath[^1];
+            snapshot.ColorNode(startIndex, Constants.ColorResult);
+            visitedNodes.Add(startIndex);
 
-            // Build the list of edge IDs along the Eulerian path.
             List<string> matchingEdgeIds = new List<string>();
             for (int i = 0; i < path.Count - 1; i++)
             {
-                string? edgeId = snapshot.GetEdgeId(path[i], path[i + 1]);
+                int u = eulerPath[eulerPath.Count - 1 - i];
+                int v = eulerPath[eulerPath.Count - 2 - i];
+
+                snapshot.ColorEdge(u, v, Constants.ColorResult);
+
+                if (!visitedNodes.Contains(v))
+                {
+                    snapshot.ColorNode(v, Constants.ColorResult);
+                    visitedNodes.Add(v);
+                }
+
+                string? edgeId = snapshot.GetEdgeId(nodes[u], nodes[v]);
                 matchingEdgeIds.Add(edgeId ?? Guid.NewGuid().ToString());
             }
 
-            // Build the minimal result graph.
             ResultGraphDto resultGraph = new ResultGraphDto
             {
                 NodeIds = path.ToArray(),
-                EdgeIds = matchingEdgeIds.ToArray()
+                EdgeIds = matchingEdgeIds.ToArray(),
+                EulerType = graph.EulerType,
+                GraphType = Constants.GraphTypes.Fleury
             };
 
             GraphStepDto stepDto = new GraphStepDto
@@ -85,7 +87,6 @@ namespace BachelorProject.Server.GraphAlgorithms.EulerianGraph
             return stepDto;
         }
 
-        // Recursive Fleury algorithm: traverse all edges starting from u.
         private static void FleuryUtil(int u, int[][] tempEdges, List<int> eulerPath, int nodesCount,
                                         Snapshots snapshot, string[] nodes, bool directed)
         {
@@ -95,8 +96,6 @@ namespace BachelorProject.Server.GraphAlgorithms.EulerianGraph
                 {
                     if (IsValidNextEdge(u, v, tempEdges, nodesCount, directed))
                     {
-                        // Mark the edge as processing.
-                        snapshot.ColorEdge(u, v, Constants.ColorProcessing);
                         RemoveEdge(u, v, tempEdges, directed);
                         snapshot.ColorEdge(u, v, Constants.ColorProcessed);
                         FleuryUtil(v, tempEdges, eulerPath, nodesCount, snapshot, nodes, directed);
@@ -106,7 +105,6 @@ namespace BachelorProject.Server.GraphAlgorithms.EulerianGraph
             eulerPath.Add(u);
         }
 
-        // Determines whether edge (u,v) is a valid next edge (not a bridge unless necessary).
         private static bool IsValidNextEdge(int u, int v, int[][] tempEdges, int nodesCount, bool directed)
         {
             int count = 0;
@@ -128,7 +126,6 @@ namespace BachelorProject.Server.GraphAlgorithms.EulerianGraph
             return count1 <= count2;
         }
 
-        // DFS to count reachable vertices.
         private static int DFSCount(int v, int[][] tempEdges, bool[] visited, int nodesCount, bool directed)
         {
             visited[v] = true;
@@ -142,7 +139,6 @@ namespace BachelorProject.Server.GraphAlgorithms.EulerianGraph
             return count;
         }
 
-        // Remove edge (u,v) from the temporary graph.
         private static void RemoveEdge(int u, int v, int[][] tempEdges, bool directed)
         {
             tempEdges[u][v]--;
@@ -150,7 +146,6 @@ namespace BachelorProject.Server.GraphAlgorithms.EulerianGraph
                 tempEdges[v][u]--;
         }
 
-        // Restore edge (u,v) in the temporary graph.
         private static void AddEdge(int u, int v, int[][] tempEdges, bool directed)
         {
             tempEdges[u][v]++;
@@ -158,7 +153,6 @@ namespace BachelorProject.Server.GraphAlgorithms.EulerianGraph
                 tempEdges[v][u]++;
         }
 
-        // DFS utility for connectivity check.
         private static void DFSUtil(int v, int[][] edges, bool[] visited, int nodesCount, bool directed)
         {
             visited[v] = true;

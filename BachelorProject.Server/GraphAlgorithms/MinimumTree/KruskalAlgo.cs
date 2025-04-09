@@ -92,7 +92,8 @@ namespace BachelorProject.Server.GraphAlgorithms.MinimumTree
             var resultGraph = new ResultGraphDto
             {
                 NodeIds = nodeIds,
-                EdgeIds = mstEdgeIds
+                EdgeIds = mstEdgeIds,
+                GraphType = Constants.GraphTypes.Kruskal
             };
 
             return new GraphStepDto

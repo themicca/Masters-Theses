@@ -16,6 +16,7 @@ export class GraphService {
   private nodes!: GraphNode[];
   private edges!: GraphEdge[];
   private directed!: boolean;
+  private eulerType: string = "";
   
   errors: string[] = [];
 
@@ -45,36 +46,37 @@ export class GraphService {
   }
 
   runDijkstra(model: GraphRequest): Observable<GraghStepsResult> {
-    return this.http.post<GraghStepsResult>('https://localhost:7130/api/Dijkstra', model)
+    return this.http.post<GraghStepsResult>('https://localhost:7130/api/Dijkstra', model);
   }
 
   runEdmondsKarp(model: GraphRequest): Observable<GraghStepsResult> {
-    return this.http.post<GraghStepsResult>('https://localhost:7130/api/EdmondsKarp', model)
+    return this.http.post<GraghStepsResult>('https://localhost:7130/api/EdmondsKarp', model);
   }
 
   runHeldKarp(model: GraphRequest): Observable<GraghStepsResult> {
-    return this.http.post<GraghStepsResult>('https://localhost:7130/api/HeldKarp', model)
+    return this.http.post<GraghStepsResult>('https://localhost:7130/api/HeldKarp', model);
   }
 
   runKruskal(model: GraphRequest): Observable<GraghStepsResult> {
-    return this.http.post<GraghStepsResult>('https://localhost:7130/api/Kruskal', model)
+    return this.http.post<GraghStepsResult>('https://localhost:7130/api/Kruskal', model);
   }
 
   runFleury(model: GraphRequest): Observable<GraghStepsResult> {
     model.src = this.src;
-    return this.http.post<GraghStepsResult>('https://localhost:7130/api/Fleury', model)
+    model.eulerType = this.eulerType;
+    return this.http.post<GraghStepsResult>('https://localhost:7130/api/Fleury', model);
   }
 
   runGreedyMatching(model: GraphRequest): Observable<GraghStepsResult> {
-    return this.http.post<GraghStepsResult>('https://localhost:7130/api/GreedyMatching', model)
+    return this.http.post<GraghStepsResult>('https://localhost:7130/api/GreedyMatching', model);
   }
 
   runGreedyColoring(model: GraphRequest): Observable<GraghStepsResult> {
-    return this.http.post<GraghStepsResult>('https://localhost:7130/api/GreedyColoring', model)
+    return this.http.post<GraghStepsResult>('https://localhost:7130/api/GreedyColoring', model);
   }
 
   runWelshPowell(model: GraphRequest): Observable<GraghStepsResult> {
-    return this.http.post<GraghStepsResult>('https://localhost:7130/api/WelshPowell', model)
+    return this.http.post<GraghStepsResult>('https://localhost:7130/api/WelshPowell', model);
   }
 
   validate(algo: string, graph: joint.dia.Graph, model: GraphRequest): string[]
@@ -90,28 +92,28 @@ export class GraphService {
 
     switch (algo) {
       case "Dijkstra":
-        this.validateDijkstra()
+        this.validateDijkstra();
         break;
       case "Kruskal":
-        this.validateKruskal()
+        this.validateKruskal();
         break;
       case "Edmonds-Karp":
-        this.validateEdmondsKarp()
+        this.validateEdmondsKarp();
         break;
       case "Held-Karp":
-        this.validateHeldKarp()
+        this.validateHeldKarp();
         break;
       case "Fleury":
-        this.validateFleury()
+        this.validateFleury();
         break;
       case "Greedy Matching":
-        this.validateGreedyMatching()
+        this.validateGreedyMatching();
         break;
       case "Greedy Coloring":
-        this.validateGreedyColoring()
+        this.validateGreedyColoring();
         break;
       case "Welsh-Powell":
-        this.validateWelshPowell()
+        this.validateWelshPowell();
         break;
       default:
         this.errors.push('Invalid algorithm.');
@@ -172,51 +174,84 @@ export class GraphService {
   }
 
   validateFleury() {
+    this.src = null; // reset
+
     if (!this.directed) {
-      let oddCount = 0;
+      let oddNodes: string[] = [];
+
       for (const node of this.nodes) {
-        const degree = this.edges.filter(e => e.sourceNodeId === node.id || e.targetNodeId === node.id).length;
+        const degree = this.edges.filter(e =>
+          e.sourceNodeId === node.id || e.targetNodeId === node.id
+        ).length;
+
         if (degree % 2 !== 0) {
-          oddCount++;
+          oddNodes.push(node.id);
         }
       }
-      if (oddCount !== 0 && oddCount !== 2) {
+
+      if (oddNodes.length === 0) {
+        this.eulerType = "cycle";
+        const candidate = this.nodes.find(n =>
+          this.edges.some(e => e.sourceNodeId === n.id || e.targetNodeId === n.id)
+        );
+        if (candidate) {
+          this.src = candidate.id;
+        }
+      } else if (oddNodes.length === 2) {
+        this.eulerType = "path";
+        this.src = oddNodes[Math.floor(Math.random() * 2)];
+      } else {
         this.errors.push('Graph is not Eulerian.');
-        this.errors.push(`It has ${oddCount} vertices with an odd degree.`)
+        this.errors.push(`It has ${oddNodes.length} vertices with an odd degree.`)
         this.errors.push('Expected 0 for an Eulerian circuit or 2 for an Eulerian path in an undirected graph.')
       }
+
     } else {
-      this.errors.push('Requires undirected graph.')
       const inDegreeMap = new Map<string, number>();
       const outDegreeMap = new Map<string, number>();
+
       for (const node of this.nodes) {
         inDegreeMap.set(node.id, 0);
         outDegreeMap.set(node.id, 0);
       }
+
       for (const edge of this.edges) {
         outDegreeMap.set(edge.sourceNodeId, (outDegreeMap.get(edge.sourceNodeId) || 0) + 1);
         inDegreeMap.set(edge.targetNodeId, (inDegreeMap.get(edge.targetNodeId) || 0) + 1);
       }
-      let startNodes = 0;
-      let endNodes = 0;
+
+      let startCandidates: string[] = [];
+      let endCandidates: string[] = [];
+
       for (const node of this.nodes) {
-        const outDegree = outDegreeMap.get(node.id) || 0;
-        const inDegree = inDegreeMap.get(node.id) || 0;
-        if (outDegree - inDegree === 1) {
-          startNodes++;
-        } else if (inDegree - outDegree === 1) {
-          endNodes++;
-        } else if (inDegree !== outDegree) {
+        const inDeg = inDegreeMap.get(node.id) || 0;
+        const outDeg = outDegreeMap.get(node.id) || 0;
+
+        if (outDeg - inDeg === 1) {
+          startCandidates.push(node.id);
+        } else if (inDeg - outDeg === 1) {
+          endCandidates.push(node.id);
+        } else if (inDeg !== outDeg) {
           this.errors.push('Graph is not Eulerian.');
-          this.errors.push(`Vertex ${node.label} has in-degree ${inDegree} and out-degree ${outDegree}.`)
-          this.errors.push('That is not allowed in directed graphs.')
+          this.errors.push(`Vertex ${node.label} has in-degree ${inDeg} and out-degree ${outDeg}.`)
+          this.errors.push('That is not allowed in directed graphs.');
           return;
         }
       }
-      if (!((startNodes === 1 && endNodes === 1) || (startNodes === 0 && endNodes === 0))) {
+
+      if (startCandidates.length === 1 && endCandidates.length === 1) {
+        this.eulerType = "path";
+        this.src = startCandidates[0];
+      } else if (startCandidates.length === 0 && endCandidates.length === 0) {
+        this.eulerType = "cycle";
+        const candidate = this.nodes.find(n => (outDegreeMap.get(n.id) || 0) > 0);
+        if (candidate) {
+          this.src = candidate.id;
+        }
+      } else {
         this.errors.push('Graph is not Eulerian.');
-        this.errors.push('Expected exactly 1 vertex with out-degree one greater than in-degree and 1 with in-degree one greater than out-degree for an Eulerian path or all vertices balanced for an Eulerian circuit.')
-        this.errors.push(`but found ${startNodes} start node(s) and ${endNodes} end node(s).`)
+        this.errors.push('Expected exactly 1 vertex with out-degree one greater than in-degree and 1 with in-degree one greater than out-degree for an Eulerian path or all vertices balanced for an Eulerian circuit.');
+        this.errors.push(`But found ${startCandidates.length} start node(s) and ${endCandidates.length} end node(s).`);
       }
     }
   }

@@ -14,7 +14,7 @@ namespace BachelorProject.Server.Controllers
         {
             try
             {
-                GraphStepDto result = WelshPowellAlgo.SolveGraph(request);
+                GraphStepDto result = await Task.Run(() => WelshPowellAlgo.SolveGraph(request));
                 return Ok(result);
             }
             catch (Exception ex)

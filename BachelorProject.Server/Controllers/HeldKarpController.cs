@@ -14,7 +14,7 @@ namespace BachelorProject.Server.Controllers
         {
             try
             {
-                GraphStepDto result = HeldKarpAlgo.SolveGraph(request);
+                GraphStepDto result = await Task.Run(() => HeldKarpAlgo.SolveGraph(request));
                 return Ok(result);
             }
             catch (Exception ex)

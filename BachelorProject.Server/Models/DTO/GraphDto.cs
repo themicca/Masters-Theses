@@ -10,5 +10,6 @@
         public Guid? Target { get; set; }
         public bool IsDirected { get; set; }
         public bool IsWeighted { get; set; }
+        public string? EulerType { get; set; }
     }
 }

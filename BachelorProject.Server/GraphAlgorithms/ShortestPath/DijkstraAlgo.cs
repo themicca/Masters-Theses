@@ -27,7 +27,7 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
         {
             string[] nodeIds = GraphDtoConvertor.ToNodeIdArray(graph);
             int[][] edgeMatrix = GraphDtoConvertor.ToAdjacencyMatrix(graph);
-            string src = graph.Src.ToString();
+            string src = graph.Src.ToString()!;
 
             bool targetProvided = !string.IsNullOrWhiteSpace(graph.Target?.ToString());
             string? target = targetProvided ? graph.Target.ToString() : null;
@@ -88,7 +88,6 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
                 snapshot.ColorNode(u, Constants.ColorProcessed);
             }
 
-            ResultGraphDto resultGraph = new ResultGraphDto();
             int totalWeight = 0;
 
             List<string> resultEdgeIds = new List<string>();
@@ -156,9 +155,13 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
                 }
             }
 
-            resultGraph.NodeIds = path.ToArray();
-            resultGraph.EdgeIds = resultEdgeIds.ToArray();
-            resultGraph.TotalWeight = totalWeight;
+            ResultGraphDto resultGraph = new ResultGraphDto
+            {
+                NodeIds = path.ToArray(),
+                EdgeIds = resultEdgeIds.ToArray(),
+                TotalWeight = totalWeight,
+                GraphType = Constants.GraphTypes.Dijkstra
+            };
 
             GraphStepDto stepDto = new GraphStepDto
             {

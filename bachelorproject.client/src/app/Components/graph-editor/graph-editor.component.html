@@ -5,19 +5,26 @@
       <div #sampleEdge class="sample-edge">Create Edge</div>
     </div>
     <div class="toggles">
-      <div class="checkbox-container">
+      <div #directionalCheckbox class="checkbox-container">
         <input type="checkbox"
                [checked]="directed"
                (change)="toggleDirectional()"
                id="directionalCheckbox" />
-        <label for="directionalCheckbox">Directional?</label>
+        <label for="directionalCheckbox">Directed?</label>
       </div>
-      <div class="checkbox-container">
+      <div #weightedCheckbox class="checkbox-container">
         <input type="checkbox"
                [checked]="weighted"
                (change)="toggleWeighted()"
                id="weightedCheckbox" />
         <label for="weightedCheckbox">Weighted?</label>
+      </div>
+      <div #tooltipCheckbox class="checkbox-container">
+        <input type="checkbox"
+               [checked]="showTooltip"
+               (change)="showTooltips()"
+               id="tooltipCheckbox" />
+        <label for="tooltipCheckbox">Show tooltips?</label>
       </div>
     </div>
   </div>
@@ -46,5 +53,9 @@
                       [paper]="paper"
                       [directed]="directed"
                       [weighted]="weighted"></app-edges-connection>
+
+<app-rename-nodes [paper]="paper" [startNode]="startNode" [endNode]="endNode"></app-rename-nodes>
+
+<app-tooltip [sampleNode]="sampleNode" [sampleEdge]="sampleEdge" [directionalCheckbox]="directionalCheckbox" [weightedCheckbox]="weightedCheckbox" [tooltipCheckbox]="tooltipCheckbox"></app-tooltip>
 
 <app-graph-submit [graph]="graph" [graphSrc]="startNode" [graphTarget]="endNode" [directed]="directed" [weighted]="weighted"></app-graph-submit>

@@ -74,9 +74,7 @@ namespace BachelorProject.Server.GraphAlgorithms.HamiltonianCycle
                             snapshot.ColorNode(v, Constants.ColorProcessing);
                             snapshot.ColorEdge(u, v, Constants.ColorProcessing);
 
-                            var lastStep = snapshot.Steps.Count > 0 ? snapshot.Steps[snapshot.Steps.Count - 1] : new StepState();
-                            lastStep.EdgeCurrentWeights[$"DP_{mask}_{v}"] = newCost;
-                            snapshot.Steps.Add(lastStep);
+                            snapshot.UpdateCurrentTotalWeight(newCost);
 
                             snapshot.ColorNode(u, Constants.ColorProcessed);
                             snapshot.ColorNode(v, Constants.ColorProcessed);
@@ -116,18 +114,11 @@ namespace BachelorProject.Server.GraphAlgorithms.HamiltonianCycle
             pathIndices.Reverse();
             pathIndices.Add(start);
 
-            for (int i = 0; i < n; i++)
-                snapshot.ColorNode(i, Constants.ColorResult);
-            for (int i = 0; i < n; i++)
-            {
-                if (i != start && parent[finalMask, i] != -1)
-                    snapshot.ColorEdge(parent[finalMask, i], i, Constants.ColorResult);
-            }
-
             List<string> tour = new List<string>();
             foreach (int idx in pathIndices)
             {
                 tour.Add(nodes[idx]);
+                snapshot.ColorNode(idx, Constants.ColorResult);
             }
 
             List<string> tourEdgeIds = new List<string>();
@@ -136,6 +127,7 @@ namespace BachelorProject.Server.GraphAlgorithms.HamiltonianCycle
                 string fromId = tour[i];
                 string toId = tour[i + 1];
                 string? edgeId = snapshot.GetEdgeId(fromId, toId);
+                snapshot.ColorEdge(fromId, toId, Constants.ColorResult);
                 tourEdgeIds.Add(edgeId ?? Guid.NewGuid().ToString());
             }
 
@@ -143,7 +135,8 @@ namespace BachelorProject.Server.GraphAlgorithms.HamiltonianCycle
             {
                 NodeIds = tour.ToArray(),
                 EdgeIds = tourEdgeIds.ToArray(),
-                TotalWeight = bestCost
+                TotalWeight = bestCost,
+                GraphType = Constants.GraphTypes.HeldKarp
             };
 
             snapshot.Steps.InsertRange(0, globalSteps);

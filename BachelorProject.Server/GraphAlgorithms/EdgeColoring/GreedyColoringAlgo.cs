@@ -29,55 +29,48 @@ namespace BachelorProject.Server.GraphAlgorithms.EdgeColoring
             }
 
             Dictionary<string, string> edgeColors = new Dictionary<string, string>();
-            string GetEdgeKey(int u, int v) => u < v ? $"{u}->{v}" : $"{v}->{u}";
+            HashSet<string> usedColors = new HashSet<string>();
 
+            string GetEdgeKey(int u, int v) => u < v ? $"{u}->{v}" : $"{v}->{u}";
             Snapshots snapshot = new Snapshots(graph, makeSnapshots);
 
             for (int i = 0; i < n; i++)
             {
                 string uId = nodeIds[i];
-                if (!adjList.ContainsKey(uId))
-                    continue;
+                if (!adjList.ContainsKey(uId)) continue;
 
-                foreach (var (neighborId, weight) in adjList[uId])
+                foreach (var (neighborId, _) in adjList[uId])
                 {
                     int j = nodeIndexMap[neighborId];
-                    if (i >= j)
-                        continue;
+                    if (i >= j) continue;
 
                     string edgeKey = GetEdgeKey(i, j);
-                    if (edgeColors.ContainsKey(edgeKey))
-                        continue;
+                    if (edgeColors.ContainsKey(edgeKey)) continue;
 
-                    HashSet<string> usedColors = new HashSet<string>();
-                    if (adjList.ContainsKey(uId))
+                    HashSet<string> neighborColors = new HashSet<string>();
+
+                    foreach (var (nbr, _) in adjList[uId])
                     {
-                        foreach (var (nbr, _) in adjList[uId])
-                        {
-                            int k = nodeIndexMap[nbr];
-                            string key = GetEdgeKey(i, k);
-                            if (edgeColors.ContainsKey(key))
-                                usedColors.Add(edgeColors[key]);
-                        }
+                        int k = nodeIndexMap[nbr];
+                        string key = GetEdgeKey(i, k);
+                        if (edgeColors.TryGetValue(key, out var color))
+                            neighborColors.Add(color);
                     }
 
-                    string vId = nodeIds[j];
-                    if (adjList.ContainsKey(vId))
+                    foreach (var (nbr, _) in adjList[neighborId])
                     {
-                        foreach (var (nbr, _) in adjList[vId])
-                        {
-                            int k = nodeIndexMap[nbr];
-                            string key = GetEdgeKey(j, k);
-                            if (edgeColors.ContainsKey(key))
-                                usedColors.Add(edgeColors[key]);
-                        }
+                        int k = nodeIndexMap[nbr];
+                        string key = GetEdgeKey(j, k);
+                        if (edgeColors.TryGetValue(key, out var color))
+                            neighborColors.Add(color);
                     }
 
-                    string chosenColor = colorList.FirstOrDefault(c => !usedColors.Contains(c));
-                    if (chosenColor == null)
-                        chosenColor = colorList.Last();
+                    string chosenColor = colorList.FirstOrDefault(c => !neighborColors.Contains(c)) ?? colorList.Last();
 
                     edgeColors[edgeKey] = chosenColor;
+                    usedColors.Add(chosenColor);
+
+                    snapshot.UpdateCurrentTotalWeight(usedColors.Count);
                     snapshot.ColorEdge(i, j, chosenColor);
                 }
             }
@@ -96,7 +89,8 @@ namespace BachelorProject.Server.GraphAlgorithms.EdgeColoring
             {
                 NodeIds = nodeIds,
                 EdgeIds = resultEdgeIds.ToArray(),
-                GraphType = GraphHelpers.AlgoTypes.GreedyColoring
+                GraphType = GraphHelpers.AlgoTypes.GreedyColoring,
+                TotalWeight = usedColors.Count
             };
 
             GraphStepDto stepDto = new GraphStepDto

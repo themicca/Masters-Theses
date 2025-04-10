@@ -40,6 +40,7 @@ namespace BachelorProject.Server.GraphAlgorithms.NodeColoring
                 if (colorAssignment[i] == -1)
                 {
                     colorAssignment[i] = currentColor;
+                    snapshot.UpdateCurrentTotalWeight(currentColor + 1);
                     snapshot.ColorNode(i, GetColorFromIndex(currentColor, currentColor + 1));
 
                     foreach (int j in sortedIndices)
@@ -58,7 +59,8 @@ namespace BachelorProject.Server.GraphAlgorithms.NodeColoring
             {
                 NodeIds = nodes,
                 EdgeIds = GraphDtoConvertor.ToEdgeIdArray(graph),
-                GraphType = GraphHelpers.AlgoTypes.WelshPowell
+                GraphType = GraphHelpers.AlgoTypes.WelshPowell,
+                TotalWeight = currentColor
             };
 
             GraphStepDto stepDto = new GraphStepDto

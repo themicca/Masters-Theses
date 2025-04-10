@@ -44,6 +44,9 @@ export class GraphConstructFromBackendComponent {
         if (graphType == "Edmonds-Karp") {
           innerText = `Current Total Flow: ${step.currentTotalWeight}`;
         }
+        else if (graphType == "Welsh-Powell" || graphType == "Greedy Coloring") {
+          innerText = `Current Used Colors: ${step.currentTotalWeight}`;
+        }
 
         const totalWeightDiv = document.createElement('div');
         totalWeightDiv.innerText = innerText;
@@ -130,6 +133,9 @@ export class GraphConstructFromBackendComponent {
       let innerText = `Total Weight: ${resultGraph.totalWeight}`;
       if (resultGraph.graphType == "Edmonds-Karp") {
         innerText = `Total Flow: ${resultGraph.totalWeight}`;
+      }
+      else if (resultGraph.graphType == "Welsh-Powell" || resultGraph.graphType == "Greedy Coloring") {
+        innerText = `Used Colors: ${resultGraph.totalWeight}`;
       }
 
       const totalWeightHeader = document.createElement('div');

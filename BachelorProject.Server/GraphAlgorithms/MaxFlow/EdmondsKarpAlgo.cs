@@ -5,7 +5,7 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
 {
     public class EdmondsKarpAlgo
     {
-        public static GraphStepDto SolveGraph(GraphDto graph)
+        public static GraphStepDto SolveGraph(GraphDto graph, bool makeSnapshots)
         {
             string[] nodes = GraphDtoConvertor.ToNodeIdArray(graph);
             int[][] capacity = GraphDtoConvertor.ToAdjacencyMatrix(graph);
@@ -29,7 +29,7 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
                 }
             }
 
-            Snapshots snapshot = new Snapshots(graph);
+            Snapshots snapshot = new Snapshots(graph, makeSnapshots);
 
             while (true)
             {
@@ -56,7 +56,7 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
                     int u = parent[v];
                     flow[u][v] += pathFlow;
                     flow[v][u] -= pathFlow;
-                    snapshot.ColorEdge(u, v, Constants.ColorResult, flow[u][v]);
+                    snapshot.ColorEdge(u, v, GraphHelpers.ColorResult, flow[u][v]);
                     v = u;
                 }
 
@@ -94,7 +94,7 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
                 EdgeIds = flowEdgeIds.ToArray(),
                 TotalWeight = totalFlow,
                 EdgeResultWeights = new(snapshot.CurrentEdgeWeights),
-                GraphType = Constants.GraphTypes.EdmondsKarp
+                GraphType = GraphHelpers.AlgoTypes.EdmondsKarp
             };
 
             GraphStepDto stepDto = new GraphStepDto
@@ -134,7 +134,7 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
                     if (!visited[v] && residual > 0)
                     {
                         bfsEdges.Add((u, v));
-                        snapshot.ColorEdge(u, v, Constants.ColorProcessing);
+                        snapshot.ColorEdge(u, v, GraphHelpers.ColorProcessing);
                         parent[v] = u;
                         visited[v] = true;
                         queue.Enqueue(v);
@@ -153,7 +153,7 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
                             foreach (var (uu, vv) in bfsEdges)
                             {
                                 if (!pathEdges.Contains((uu, vv)))
-                                    snapshot.ColorEdge(uu, vv, Constants.ColorDiscarded);
+                                    snapshot.ColorEdge(uu, vv, GraphHelpers.ColorDiscarded);
                             }
                             return true;
                         }

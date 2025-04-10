@@ -6,7 +6,7 @@ namespace BachelorProject.Server.GraphAlgorithms.HamiltonianCycle
 {
     public class HeldKarpAlgo
     {
-        public static GraphStepDto SolveGraph(GraphDto graph)
+        public static GraphStepDto SolveGraph(GraphDto graph, bool makeSnapshots)
         {
             string[] nodes = GraphDtoConvertor.ToNodeIdArray(graph);
             int n = nodes.Length;
@@ -29,7 +29,7 @@ namespace BachelorProject.Server.GraphAlgorithms.HamiltonianCycle
                     if (matrix[i][j] == 0)
                     {
                         GraphDto tempGraph = CloneGraphWithNewEndpoints(graph, nodes[i], nodes[j]);
-                        GraphStepDto dijkstraResult = DijkstraAlgo.SolveGraph(tempGraph);
+                        GraphStepDto dijkstraResult = DijkstraAlgo.SolveGraph(tempGraph, false);
 
                         globalSteps.AddRange(dijkstraResult.Steps);
 
@@ -52,7 +52,7 @@ namespace BachelorProject.Server.GraphAlgorithms.HamiltonianCycle
             }
             dp[1 << start, start] = 0;
 
-            Snapshots snapshot = new Snapshots(graph);
+            Snapshots snapshot = new Snapshots(graph, makeSnapshots);
 
             for (int mask = 0; mask < numSubsets; mask++)
             {
@@ -70,15 +70,15 @@ namespace BachelorProject.Server.GraphAlgorithms.HamiltonianCycle
                             dp[nextMask, v] = newCost;
                             parent[nextMask, v] = u;
 
-                            snapshot.ColorNode(u, Constants.ColorProcessing);
-                            snapshot.ColorNode(v, Constants.ColorProcessing);
-                            snapshot.ColorEdge(u, v, Constants.ColorProcessing);
+                            snapshot.ColorNode(u, GraphHelpers.ColorProcessing);
+                            snapshot.ColorNode(v, GraphHelpers.ColorProcessing);
+                            snapshot.ColorEdge(u, v, GraphHelpers.ColorProcessing);
 
                             snapshot.UpdateCurrentTotalWeight(newCost);
 
-                            snapshot.ColorNode(u, Constants.ColorProcessed);
-                            snapshot.ColorNode(v, Constants.ColorProcessed);
-                            snapshot.ColorEdge(u, v, Constants.ColorProcessed);
+                            snapshot.ColorNode(u, GraphHelpers.ColorProcessed);
+                            snapshot.ColorNode(v, GraphHelpers.ColorProcessed);
+                            snapshot.ColorEdge(u, v, GraphHelpers.ColorProcessed);
                         }
                     }
                 }
@@ -118,7 +118,7 @@ namespace BachelorProject.Server.GraphAlgorithms.HamiltonianCycle
             foreach (int idx in pathIndices)
             {
                 tour.Add(nodes[idx]);
-                snapshot.ColorNode(idx, Constants.ColorResult);
+                snapshot.ColorNode(idx, GraphHelpers.ColorResult);
             }
 
             List<string> tourEdgeIds = new List<string>();
@@ -127,7 +127,7 @@ namespace BachelorProject.Server.GraphAlgorithms.HamiltonianCycle
                 string fromId = tour[i];
                 string toId = tour[i + 1];
                 string? edgeId = snapshot.GetEdgeId(fromId, toId);
-                snapshot.ColorEdge(fromId, toId, Constants.ColorResult);
+                snapshot.ColorEdge(fromId, toId, GraphHelpers.ColorResult);
                 tourEdgeIds.Add(edgeId ?? Guid.NewGuid().ToString());
             }
 
@@ -136,7 +136,7 @@ namespace BachelorProject.Server.GraphAlgorithms.HamiltonianCycle
                 NodeIds = tour.ToArray(),
                 EdgeIds = tourEdgeIds.ToArray(),
                 TotalWeight = bestCost,
-                GraphType = Constants.GraphTypes.HeldKarp
+                GraphType = GraphHelpers.AlgoTypes.HeldKarp
             };
 
             snapshot.Steps.InsertRange(0, globalSteps);

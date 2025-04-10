@@ -154,7 +154,7 @@ export class GraphConstructFromBackendComponent {
       drawGrid: true,
       background: { color: '#f8f9fa' }
     });
-
+    
     const nodeMap = new Map<string, joint.dia.Element>();
 
     resultGraph.nodeIds.forEach(nodeId => {
@@ -164,11 +164,36 @@ export class GraphConstructFromBackendComponent {
       circle.position(nodeObj.x, nodeObj.y);
       circle.resize(80, 80);
       circle.attr({
-        body: { fill: resultGraph.graphType == "Welsh-Powell" ? lastStep.edgeColors[nodeId] : '#3498db', stroke: '#2980b9', strokeWidth: 2 },
+        body: { fill: resultGraph.graphType == "Welsh-Powell" ? lastStep.nodeColors[nodeId] : '#3498db', stroke: '#2980b9', strokeWidth: 2 },
         label: { text: nodeObj.label, fill: '#ffffff', fontSize: 14 }
       });
       circle.addTo(graph);
       nodeMap.set(nodeObj.id, circle);
+
+      if (resultGraph.graphType === "Held-Karp") {
+        const traversalIndex = resultGraph.nodeIds.indexOf(nodeId);
+        let orderNumber = null;
+
+        if (traversalIndex > 0) {
+          orderNumber = traversalIndex;
+        } else if (traversalIndex === 0) {
+          orderNumber = resultGraph.nodeIds.length - 1;
+        }
+
+        if (orderNumber !== null) {
+          const text = new joint.shapes.standard.TextBlock();
+          text.position(nodeObj.x + 25, nodeObj.y - 30);
+          text.resize(40, 20);
+          text.attr({
+            label: {
+              text: orderNumber.toString(),
+              fill: '#000000',
+              fontSize: 14
+            }
+          });
+          text.addTo(graph);
+        }
+      }
     });
 
     resultGraph.edgeIds.forEach(edgeId => {

@@ -1,6 +1,4 @@
-﻿using Azure.Core;
-using BachelorProject.Server.Helpers;
-using BachelorProject.Server.Models.Domain;
+﻿using BachelorProject.Server.Helpers;
 using BachelorProject.Server.Models.DTO;
 
 namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
@@ -9,87 +7,85 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
     {
         static int nodesCount;
 
-        static int minDistance(int[] dist, bool[] sptSet)
-        {
-            int min = int.MaxValue, min_index = -1;
-            for (int v = 0; v < nodesCount; v++)
-            {
-                if (!sptSet[v] && dist[v] <= min)
-                {
-                    min = dist[v];
-                    min_index = v;
-                }
-            }
-            return min_index;
-        }
-
-        public static GraphStepDto SolveGraph(GraphDto graph)
+        public static GraphStepDto SolveGraph(GraphDto graph, bool makeSnapshots)
         {
             string[] nodeIds = GraphDtoConvertor.ToNodeIdArray(graph);
-            int[][] edgeMatrix = GraphDtoConvertor.ToAdjacencyMatrix(graph);
-            string src = graph.Src.ToString()!;
+            nodesCount = nodeIds.Length;
 
+            var nodeIndexMap = nodeIds
+                                .Select((id, index) => new { Id = id, Index = index })
+                                .ToDictionary(x => x.Id, x => x.Index);
+
+            var adjList = GraphDtoConvertor.ToAdjacencyList(graph);
+
+            string src = graph.Src.ToString()!;
             bool targetProvided = !string.IsNullOrWhiteSpace(graph.Target?.ToString());
             string? target = targetProvided ? graph.Target.ToString() : null;
 
-            Snapshots snapshot = new Snapshots(graph);
-
+            Snapshots snapshot = new Snapshots(graph, makeSnapshots);
             int currentTotalWeight = 0;
 
-            nodesCount = nodeIds.Length;
-            int srcIndex = Array.IndexOf(nodeIds, src);
-            int targetIndex = targetProvided ? Array.IndexOf(nodeIds, target) : -1;
-            if (srcIndex == -1 || (targetProvided && targetIndex == -1))
-                throw new ArgumentException("Source or target node not found in the node list.");
+            if (!nodeIndexMap.TryGetValue(src, out int srcIndex))
+                throw new ArgumentException("Source node not found in the node list.");
+            int targetIndex = -1;
+            if (targetProvided)
+            {
+                if (!nodeIndexMap.TryGetValue(target!, out targetIndex))
+                    throw new ArgumentException("Target node not found in the node list.");
+            }
 
             int[] dist = new int[nodesCount];
-            bool[] sptSet = new bool[nodesCount];
+            bool[] visited = new bool[nodesCount];
             int[] previous = new int[nodesCount];
             for (int i = 0; i < nodesCount; i++)
             {
                 dist[i] = int.MaxValue;
-                sptSet[i] = false;
+                visited[i] = false;
                 previous[i] = -1;
             }
             dist[srcIndex] = 0;
 
-            for (int count = 0; count < nodesCount; count++)
+            var priorityQueue = new PriorityQueue<int, int>();
+            priorityQueue.Enqueue(srcIndex, 0);
+
+            while (priorityQueue.Count > 0)
             {
-                int u = minDistance(dist, sptSet);
-                if (u == -1)
-                    break;
+                int u = priorityQueue.Dequeue();
+                if (visited[u])
+                    continue;
 
-                sptSet[u] = true;
-                snapshot.ColorNode(u, Constants.ColorProcessing);
+                visited[u] = true;
+                snapshot.ColorNode(u, GraphHelpers.ColorProcessing);
 
-                for (int v = 0; v < nodesCount; v++)
+                string currentNodeId = nodeIds[u];
+
+                if (adjList.TryGetValue(currentNodeId, out List<(string to, int weight)>? neighbors))
                 {
-                    if (!sptSet[v] && edgeMatrix[u][v] != 0 && dist[u] < Constants.MaxWeight && dist[u] + edgeMatrix[u][v] < dist[v])
+                    foreach (var neighbor in neighbors)
                     {
-                        snapshot.ColorEdge(u, v, Constants.ColorProcessing);
-                        int newDist = dist[u] + edgeMatrix[u][v];
-                        if (newDist < dist[v])
+                        if (!nodeIndexMap.TryGetValue(neighbor.to, out int v))
+                            continue;
+
+                        if (!visited[v] && dist[u] != int.MaxValue &&
+                            dist[u] + neighbor.weight < dist[v])
                         {
+                            snapshot.ColorEdge(currentNodeId, neighbor.to, GraphHelpers.ColorProcessing);
+                            int newDist = dist[u] + neighbor.weight;
                             dist[v] = newDist;
                             previous[v] = u;
 
-                            string fromId = nodeIds[u];
-                            string toId = nodeIds[v];
-                            string? edgeId = snapshot.GetEdgeId(fromId, toId);
-                            if (edgeId == null)
-                                edgeId = Guid.NewGuid().ToString();
                             currentTotalWeight = newDist;
-
-                            snapshot.ColorEdge(u, v, Constants.ColorProcessed);
                             snapshot.UpdateCurrentTotalWeight(currentTotalWeight);
+                            snapshot.ColorEdge(currentNodeId, neighbor.to, GraphHelpers.ColorProcessed);
+
+                            priorityQueue.Enqueue(v, newDist);
                         }
                     }
                 }
-                snapshot.ColorNode(u, Constants.ColorProcessed);
+                snapshot.ColorNode(u, GraphHelpers.ColorProcessed);
             }
 
             int totalWeight = 0;
-
             List<string> resultEdgeIds = new List<string>();
             List<string> path = new List<string>();
             if (targetProvided)
@@ -101,6 +97,7 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
                     cur = previous[cur];
                 }
                 path.Reverse();
+
                 if (path.Count == 0 || path[0] != src)
                     throw new InvalidOperationException("No path exists between the source and target nodes.");
 
@@ -113,13 +110,13 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
                     string? edgeId = snapshot.GetEdgeId(fromId, toId);
                     resultEdgeIds.Add(edgeId ?? Guid.NewGuid().ToString());
 
-                    int fromIndex = Array.IndexOf(nodeIds, fromId);
-                    int toIndex = Array.IndexOf(nodeIds, toId);
-                    snapshot.ColorEdge(fromIndex, toIndex, Constants.ColorResult);
-                    snapshot.ColorNode(fromIndex, Constants.ColorResult);
+                    int fromIndex = nodeIndexMap[fromId];
+                    int toIndex = nodeIndexMap[toId];
+                    snapshot.ColorEdge(fromIndex, toIndex, GraphHelpers.ColorResult);
+                    snapshot.ColorNode(fromIndex, GraphHelpers.ColorResult);
                 }
-                int lastIndex = Array.IndexOf(nodeIds, path[path.Count - 1]);
-                snapshot.ColorNode(lastIndex, Constants.ColorResult);
+                int lastIndex = nodeIndexMap[path[path.Count - 1]];
+                snapshot.ColorNode(lastIndex, GraphHelpers.ColorResult);
             }
             else
             {
@@ -136,7 +133,8 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
                             if (edgeId == null)
                                 edgeId = Guid.NewGuid().ToString();
                             resultEdgeIds.Add(edgeId);
-                            totalWeight += edgeMatrix[previous[i]][i];
+                            totalWeight += adjList[fromId]
+                                               .First(edgeTuple => edgeTuple.to == toId).weight;
                         }
                     }
                 }
@@ -146,12 +144,12 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
                         continue;
                     if (previous[i] != -1)
                     {
-                        snapshot.ColorEdge(previous[i], i, Constants.ColorResult);
+                        snapshot.ColorEdge(previous[i], i, GraphHelpers.ColorResult);
                     }
                 }
                 for (int i = 0; i < nodesCount; i++)
                 {
-                    snapshot.ColorNode(i, Constants.ColorResult);
+                    snapshot.ColorNode(i, GraphHelpers.ColorResult);
                 }
             }
 
@@ -160,7 +158,7 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
                 NodeIds = path.ToArray(),
                 EdgeIds = resultEdgeIds.ToArray(),
                 TotalWeight = totalWeight,
-                GraphType = Constants.GraphTypes.Dijkstra
+                GraphType = GraphHelpers.AlgoTypes.Dijkstra
             };
 
             GraphStepDto stepDto = new GraphStepDto
@@ -171,5 +169,6 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
 
             return stepDto;
         }
+
     }
 }

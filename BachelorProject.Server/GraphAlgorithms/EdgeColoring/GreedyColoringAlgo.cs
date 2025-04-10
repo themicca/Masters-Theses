@@ -5,7 +5,7 @@ namespace BachelorProject.Server.GraphAlgorithms.EdgeColoring
 {
     public class GreedyColoringAlgo
     {
-        public static GraphStepDto SolveGraph(GraphDto graph)
+        public static GraphStepDto SolveGraph(GraphDto graph, bool makeSnapshots)
         {
             string[] nodeIds = GraphDtoConvertor.ToNodeIdArray(graph);
             int n = nodeIds.Length;
@@ -24,14 +24,14 @@ namespace BachelorProject.Server.GraphAlgorithms.EdgeColoring
             for (int i = 0; i < maxColors; i++)
             {
                 double hue = (360.0 * i) / maxColors;
-                string hexColor = ColorFromHSV(hue, 0.8, 0.8);
+                string hexColor = GraphHelpers.ColorFromHSV(hue, 0.8, 0.8);
                 colorList.Add(hexColor);
             }
 
             Dictionary<string, string> edgeColors = new Dictionary<string, string>();
             string GetEdgeKey(int u, int v) => u < v ? $"{u}->{v}" : $"{v}->{u}";
 
-            Snapshots snapshot = new Snapshots(graph);
+            Snapshots snapshot = new Snapshots(graph, makeSnapshots);
 
             for (int i = 0; i < n; i++)
             {
@@ -96,7 +96,7 @@ namespace BachelorProject.Server.GraphAlgorithms.EdgeColoring
             {
                 NodeIds = nodeIds,
                 EdgeIds = resultEdgeIds.ToArray(),
-                GraphType = Constants.GraphTypes.GreedyColoring
+                GraphType = GraphHelpers.AlgoTypes.GreedyColoring
             };
 
             GraphStepDto stepDto = new GraphStepDto
@@ -106,56 +106,6 @@ namespace BachelorProject.Server.GraphAlgorithms.EdgeColoring
             };
 
             return stepDto;
-        }
-
-        private static string ColorFromHSV(double hue, double saturation, double value)
-        {
-            double c = value * saturation;
-            double x = c * (1 - Math.Abs((hue / 60.0) % 2 - 1));
-            double m = value - c;
-            double r_prime, g_prime, b_prime;
-
-            if (hue < 60)
-            {
-                r_prime = c;
-                g_prime = x;
-                b_prime = 0;
-            }
-            else if (hue < 120)
-            {
-                r_prime = x;
-                g_prime = c;
-                b_prime = 0;
-            }
-            else if (hue < 180)
-            {
-                r_prime = 0;
-                g_prime = c;
-                b_prime = x;
-            }
-            else if (hue < 240)
-            {
-                r_prime = 0;
-                g_prime = x;
-                b_prime = c;
-            }
-            else if (hue < 300)
-            {
-                r_prime = x;
-                g_prime = 0;
-                b_prime = c;
-            }
-            else
-            {
-                r_prime = c;
-                g_prime = 0;
-                b_prime = x;
-            }
-
-            int r = (int)Math.Round((r_prime + m) * 255);
-            int g = (int)Math.Round((g_prime + m) * 255);
-            int b = (int)Math.Round((b_prime + m) * 255);
-            return $"#{r:X2}{g:X2}{b:X2}";
         }
     }
 }

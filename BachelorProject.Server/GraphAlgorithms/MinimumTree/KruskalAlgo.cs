@@ -22,12 +22,12 @@ namespace BachelorProject.Server.GraphAlgorithms.MinimumTree
             }
         }
 
-        public static GraphStepDto SolveGraph(GraphDto graph)
+        public static GraphStepDto SolveGraph(GraphDto graph, bool makeSnapshots)
         {
 
             string[] nodeIds = GraphDtoConvertor.ToNodeIdArray(graph);
             var edgeList = GraphDtoConvertor.ToEdgeListDetailed(graph);
-            Snapshots snapshot = new Snapshots(graph);
+            Snapshots snapshot = new Snapshots(graph, makeSnapshots);
 
             int nodesCount = nodeIds.Length;
 
@@ -38,7 +38,7 @@ namespace BachelorProject.Server.GraphAlgorithms.MinimumTree
             List<Edge> allEdges = new List<Edge>();
             foreach (var (edgeId, sourceId, targetId, weight) in edgeList)
             {
-                if (weight == 0 || weight >= Constants.MaxWeight)
+                if (weight == 0 || weight >= GraphHelpers.MaxWeight)
                     continue;
 
                 if (!nodeIndexMap.TryGetValue(sourceId, out int fromIndex))
@@ -64,7 +64,7 @@ namespace BachelorProject.Server.GraphAlgorithms.MinimumTree
 
             foreach (var edge in allEdges)
             {
-                snapshot.ColorEdge(edge.From, edge.To, Constants.ColorProcessing);
+                snapshot.ColorEdge(edge.From, edge.To, GraphHelpers.ColorProcessing);
 
                 int root1 = Find(parent, edge.From);
                 int root2 = Find(parent, edge.To);
@@ -74,17 +74,12 @@ namespace BachelorProject.Server.GraphAlgorithms.MinimumTree
                     mstEdges.Add(edge);
                     Union(parent, root1, root2);
 
-                    snapshot.ColorEdge(edge.From, edge.To, Constants.ColorResult);
+                    snapshot.ColorEdge(edge.From, edge.To, GraphHelpers.ColorResult);
                 }
                 else
                 {
-                    snapshot.ColorEdge(edge.From, edge.To, Constants.ColorDiscarded);
+                    snapshot.ColorEdge(edge.From, edge.To, GraphHelpers.ColorDiscarded);
                 }
-            }
-
-            for (int i = 0; i < nodesCount; i++)
-            {
-                snapshot.ColorNode(i, Constants.ColorResult);
             }
 
             var mstEdgeIds = mstEdges.Select(e => e.OriginalEdgeId).ToArray();
@@ -93,7 +88,7 @@ namespace BachelorProject.Server.GraphAlgorithms.MinimumTree
             {
                 NodeIds = nodeIds,
                 EdgeIds = mstEdgeIds,
-                GraphType = Constants.GraphTypes.Kruskal
+                GraphType = GraphHelpers.AlgoTypes.Kruskal
             };
 
             return new GraphStepDto

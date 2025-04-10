@@ -1,11 +1,11 @@
-﻿using BachelorProject.Server.Models.Domain;
-using BachelorProject.Server.Models.DTO;
-using System.Drawing;
+﻿using BachelorProject.Server.Models.DTO;
 
 namespace BachelorProject.Server.Helpers
 {
     public class Snapshots
     {
+        private readonly bool makeSnapshots;
+
         private readonly NodeDto[] nodes;
         private readonly EdgeDto[] edges;
         private readonly Dictionary<string, string> nodeColors;
@@ -16,8 +16,9 @@ namespace BachelorProject.Server.Helpers
 
         public List<StepState> Steps { get; private set; }
 
-        public Snapshots(GraphDto graph)
+        public Snapshots(GraphDto graph, bool makeSnapshots)
         {
+            this.makeSnapshots = makeSnapshots;
             nodes = graph.Nodes.ToArray();
             edges = graph.Edges.ToArray();
             Steps = new List<StepState>();
@@ -29,7 +30,7 @@ namespace BachelorProject.Server.Helpers
             foreach (var node in nodes)
             {
                 string nodeId = node.Id.ToString();
-                nodeColors[nodeId] = Constants.ColorBaseNode;
+                nodeColors[nodeId] = GraphHelpers.ColorBaseNode;
             }
 
             foreach (var edge in edges)
@@ -41,7 +42,7 @@ namespace BachelorProject.Server.Helpers
                 if (!edgeLookup.ContainsKey(lookupKey))
                 {
                     edgeLookup[lookupKey] = edgeId;
-                    edgeColors[edgeId] = Constants.ColorBaseEdge;
+                    edgeColors[edgeId] = GraphHelpers.ColorBaseEdge;
                     CurrentEdgeWeights[edgeId] = null;
                 }
                 if (!graph.IsDirected)
@@ -65,6 +66,7 @@ namespace BachelorProject.Server.Helpers
 
         public void ColorNode(int nodeIndex, string color)
         {
+            if (!makeSnapshots) return;
             if (nodeIndex < 0 || nodeIndex >= nodes.Length)
                 throw new ArgumentOutOfRangeException(nameof(nodeIndex));
 
@@ -78,6 +80,7 @@ namespace BachelorProject.Server.Helpers
 
         public void ColorEdge(string fromId, string toId, string color)
         {
+            if (!makeSnapshots) return;
             string lookupKey = $"{fromId}->{toId}";
             if (edgeLookup.TryGetValue(lookupKey, out string edgeId))
             {
@@ -89,6 +92,7 @@ namespace BachelorProject.Server.Helpers
 
         public void ColorEdge(int startNodeIndex, int endNodeIndex, string color)
         {
+            if (!makeSnapshots) return;
             if (startNodeIndex < 0 || startNodeIndex >= nodes.Length)
                 throw new ArgumentOutOfRangeException(nameof(startNodeIndex));
             if (endNodeIndex < 0 || endNodeIndex >= nodes.Length)
@@ -107,6 +111,7 @@ namespace BachelorProject.Server.Helpers
 
         public void ColorEdge(int startNodeIndex, int endNodeIndex, string color, int currentEdgeWeight)
         {
+            if (!makeSnapshots) return;
             if (startNodeIndex < 0 || startNodeIndex >= nodes.Length)
                 throw new ArgumentOutOfRangeException(nameof(startNodeIndex));
             if (endNodeIndex < 0 || endNodeIndex >= nodes.Length)

@@ -101,7 +101,10 @@ export class TooltipComponent {
       `Finds hamiltonian cycle using dynamic programming.
       Requires:
       - Start node
-      - Non negative edge weights`
+      - Non negative edge weights
+      - Hamiltonian cycle must exist
+
+      Assumes complete graph, if complete graph is not provided, it uses dijkstra to fill the edge matrix with missing weights.`
     );
 
     this.addElementTooltip(this.buttonGreedyMatching,
@@ -169,6 +172,7 @@ export class TooltipComponent {
   }
 
   public disableAllTooltips(): void {
+    this.tooltipElement.style.display = 'none';
     for (const [element, handlers] of this.tooltipListeners.entries()) {
       element.removeEventListener('mouseenter', handlers.enter);
       element.removeEventListener('mouseleave', handlers.leave);
@@ -177,6 +181,7 @@ export class TooltipComponent {
   }
 
   public enableAllTooltips(): void {
+    this.tooltipElement.style.display = 'block';
     for (const [element, data] of this.tooltipListeners.entries()) {
       this.addElementTooltip(element, data.tooltip);
     }

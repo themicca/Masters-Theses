@@ -1,10 +1,3 @@
-
-using BachelorProject.Server.Data;
-using BachelorProject.Server.GraphAlgorithms.ShortestPath;
-using BachelorProject.Server.Repositories.Implementation;
-using BachelorProject.Server.Repositories.Interface;
-using Microsoft.EntityFrameworkCore;
-
 namespace BachelorProject.Server
 {
     public class Program
@@ -17,13 +10,6 @@ namespace BachelorProject.Server
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
-            {
-                options.UseSqlServer(builder.Configuration.GetConnectionString("GraphAppConnectionString"));
-            });
-             
-            builder.Services.AddScoped<IGraphRepository, GraphRepository>();
 
             var app = builder.Build();
 

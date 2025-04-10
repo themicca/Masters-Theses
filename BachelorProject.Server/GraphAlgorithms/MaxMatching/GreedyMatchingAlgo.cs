@@ -5,7 +5,7 @@ namespace BachelorProject.Server.GraphAlgorithms.MaxMatching
 {
     public class GreedyMatchingAlgo
     {
-        public static GraphStepDto SolveGraph(GraphDto graph)
+        public static GraphStepDto SolveGraph(GraphDto graph, bool makeSnapshots)
         {
             string[] nodeIds = GraphDtoConvertor.ToNodeIdArray(graph);
             int n = nodeIds.Length;
@@ -17,7 +17,7 @@ namespace BachelorProject.Server.GraphAlgorithms.MaxMatching
                 match[i] = -1;
 
             List<string> matchingEdgeIds = new List<string>();
-            Snapshots snapshot = new Snapshots(graph);
+            Snapshots snapshot = new Snapshots(graph, makeSnapshots);
 
             for (int i = 0; i < n; i++)
             {
@@ -29,16 +29,16 @@ namespace BachelorProject.Server.GraphAlgorithms.MaxMatching
                     if (match[j] != -1)
                         continue;
 
-                    if (edges[i][j] != 0 && edges[i][j] < Constants.MaxWeight)
+                    if (edges[i][j] != 0 && edges[i][j] < GraphHelpers.MaxWeight)
                     {
-                        snapshot.ColorEdge(i, j, Constants.ColorProcessing);
+                        snapshot.ColorEdge(i, j, GraphHelpers.ColorProcessing);
 
                         match[i] = j;
                         match[j] = i;
 
-                        snapshot.ColorNode(i, Constants.ColorResult);
-                        snapshot.ColorNode(j, Constants.ColorResult);
-                        snapshot.ColorEdge(i, j, Constants.ColorResult);
+                        snapshot.ColorNode(i, GraphHelpers.ColorResult);
+                        snapshot.ColorNode(j, GraphHelpers.ColorResult);
+                        snapshot.ColorEdge(i, j, GraphHelpers.ColorResult);
 
                         break;
                     }
@@ -59,7 +59,7 @@ namespace BachelorProject.Server.GraphAlgorithms.MaxMatching
             {
                 NodeIds = nodeIds,
                 EdgeIds = matchingEdgeIds.ToArray(),
-                GraphType = Constants.GraphTypes.GreedyMatching
+                GraphType = GraphHelpers.AlgoTypes.GreedyMatching
             };
 
             GraphStepDto resultDto = new GraphStepDto

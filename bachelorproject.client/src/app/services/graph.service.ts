@@ -146,6 +146,12 @@ export class GraphService {
       }
       return false;
     });
+    
+    const matrix = this.buildAdjacencyMatrix(this.nodes, this.edges);
+
+    if (!this.hasHamiltonianCycle(matrix)) {
+      this.errors.push('Graph does not contain a Hamiltonian Cycle.');
+    }
   }
 
   validateKruskal() {
@@ -174,8 +180,34 @@ export class GraphService {
   }
 
   validateFleury() {
-    this.src = null; // reset
+    this.src = null;
 
+    if (!this.directed) {
+      this.errors.push('Requires directed graph.');
+    }
+
+    this.eulerGraphConditionsCheck();
+  }
+
+  validateGreedyMatching() {
+    if (this.directed) {
+      this.errors.push('Requires undirected graph.');
+    }
+  }
+
+  validateGreedyColoring() {
+    if (this.directed) {
+      this.errors.push('Requires undirected graph.');
+    }
+  }
+
+  validateWelshPowell() {
+    if (this.directed) {
+      this.errors.push('Requires undirected graph.');
+    }
+  }
+
+  private eulerGraphConditionsCheck() {
     if (!this.directed) {
       let oddNodes: string[] = [];
 
@@ -256,26 +288,62 @@ export class GraphService {
     }
   }
 
-  validateGreedyMatching() {
-    if (this.directed) {
-      this.errors.push('Requires undirected graph.');
+  private buildAdjacencyMatrix(nodes: GraphNode[], edges: GraphEdge[]): number[][] {
+    const n = nodes.length;
+    const nodeIndexMap = new Map<string, number>();
+    nodes.forEach((node, index) => {
+      nodeIndexMap.set(node.id, index);
+    });
+    
+    const matrix: number[][] = Array.from({ length: n }, () => Array(n).fill(0));
+    
+    edges.forEach(edge => {
+      const sourceIndex = nodeIndexMap.get(edge.sourceNodeId);
+      const targetIndex = nodeIndexMap.get(edge.targetNodeId);
+      if (sourceIndex !== undefined && targetIndex !== undefined) {
+        matrix[sourceIndex][targetIndex] = edge.weight;
+        if (!this.directed) {
+          matrix[targetIndex][sourceIndex] = edge.weight;
+        }
+      }
+    });
+
+    return matrix;
+  }
+  
+  private hamiltonianCycleUtil(
+    matrix: number[][],
+    start: number,
+    current: number,
+    visited: boolean[],
+    count: number
+  ): boolean {
+    const n = matrix.length;
+    
+    if (count === n) {
+      return matrix[current][start] !== 0;
     }
-  }
 
-  validateGreedyColoring() {
-    if (this.directed) {
-      this.errors.push('Requires undirected graph.');
+    for (let next = 0; next < n; next++) {
+      if (!visited[next] && matrix[current][next] !== 0) {
+        visited[next] = true;
+        if (this.hamiltonianCycleUtil(matrix, start, next, visited, count + 1)) {
+          return true;
+        }
+        visited[next] = false;
+      }
     }
+    return false;
   }
+  
+  private hasHamiltonianCycle(matrix: number[][]): boolean {
+    const n = matrix.length;
+    if (n === 0) {
+      return false;
+    }
 
-  validateWelshPowell() {
+    const visited: boolean[] = new Array(n).fill(false);
+    visited[0] = true;
+    return this.hamiltonianCycleUtil(matrix, 0, 0, visited, 1);
   }
-
-  /*addGraph(model: GraphRequest): Observable<void> {
-    return this.http.post<void>('https://localhost:7130/api/Graphs', model)
-  }
-
-  solveGraph(model: GraphRequest): Observable<void> {
-    return this.http.post<void>('https://localhost:7130/api/Djikstra', model)
-  }*/
 }

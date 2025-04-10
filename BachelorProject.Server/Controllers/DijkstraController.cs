@@ -1,6 +1,4 @@
 ﻿using BachelorProject.Server.GraphAlgorithms.ShortestPath;
-using BachelorProject.Server.Helpers;
-using BachelorProject.Server.Models.Domain;
 using BachelorProject.Server.Models.DTO;
 using Microsoft.AspNetCore.Mvc;
 using System.IO;
@@ -16,7 +14,7 @@ namespace BachelorProject.Server.Controllers
         {
             try
             {
-                GraphStepDto result = await Task.Run(() => DijkstraAlgo.SolveGraph(request));
+                GraphStepDto result = await Task.Run(() => DijkstraAlgo.SolveGraph(request, true));
                 return Ok(result);
             }
             catch (Exception ex)

@@ -15,7 +15,7 @@ namespace BachelorProject.Server.Controllers
         {
             try
             {
-                GraphStepDto result = await Task.Run(() => KruskalAlgo.SolveGraph(request));
+                GraphStepDto result = await Task.Run(() => KruskalAlgo.SolveGraph(request, true));
                 return Ok(result);
             }
             catch (Exception ex)

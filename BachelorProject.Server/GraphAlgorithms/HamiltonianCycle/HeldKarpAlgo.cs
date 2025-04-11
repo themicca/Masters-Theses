@@ -19,7 +19,7 @@ namespace BachelorProject.Server.GraphAlgorithms.HamiltonianCycle
             if (start == -1)
                 throw new ArgumentException("Source node not found in the node list.");
 
-            List<StepState> globalSteps = new List<StepState>();
+            List<Step> globalSteps = new List<Step>();
 
             for (int i = 0; i < n; i++)
             {
@@ -136,7 +136,7 @@ namespace BachelorProject.Server.GraphAlgorithms.HamiltonianCycle
                 NodeIds = tour.ToArray(),
                 EdgeIds = tourEdgeIds.ToArray(),
                 TotalWeight = bestCost,
-                GraphType = GraphHelpers.AlgoTypes.HeldKarp
+                AlgoType = GraphHelpers.AlgoTypes.HeldKarp
             };
 
             snapshot.Steps.InsertRange(0, globalSteps);

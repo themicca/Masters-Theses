@@ -59,7 +59,7 @@ namespace BachelorProject.Server.GraphAlgorithms.NodeColoring
             {
                 NodeIds = nodes,
                 EdgeIds = GraphDtoConvertor.ToEdgeIdArray(graph),
-                GraphType = GraphHelpers.AlgoTypes.WelshPowell,
+                AlgoType = GraphHelpers.AlgoTypes.WelshPowell,
                 TotalWeight = currentColor
             };
 

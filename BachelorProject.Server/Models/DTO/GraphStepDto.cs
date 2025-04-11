@@ -2,11 +2,11 @@
 {
     public class GraphStepDto
     {
-        public List<StepState> Steps { get; set; }
+        public List<Step> Steps { get; set; }
         public ResultGraphDto ResultGraph { get; set; }
     }
 
-    public class StepState
+    public class Step
     {
         public Dictionary<string, string> NodeColors { get; set; } = [];
         public Dictionary<string, string> EdgeColors { get; set; } = [];

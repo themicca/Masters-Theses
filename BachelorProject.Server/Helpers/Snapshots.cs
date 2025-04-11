@@ -14,14 +14,14 @@ namespace BachelorProject.Server.Helpers
         public Dictionary<string, int?> CurrentEdgeWeights { get; private set; }
         int? currentTotalWeight = null;
 
-        public List<StepState> Steps { get; private set; }
+        public List<Step> Steps { get; private set; }
 
         public Snapshots(GraphDto graph, bool makeSnapshots)
         {
             this.makeSnapshots = makeSnapshots;
             nodes = graph.Nodes.ToArray();
             edges = graph.Edges.ToArray();
-            Steps = new List<StepState>();
+            Steps = new List<Step>();
             nodeColors = new Dictionary<string, string>();
             edgeColors = new Dictionary<string, string>();
             edgeLookup = new Dictionary<string, string>();
@@ -136,9 +136,9 @@ namespace BachelorProject.Server.Helpers
             return edgeId;
         }
 
-        public StepState TakeSnapshot()
+        public Step TakeSnapshot()
         {
-            var step = new StepState
+            var step = new Step
             {
                 NodeColors = new Dictionary<string, string>(nodeColors),
                 EdgeColors = new Dictionary<string, string>(edgeColors),

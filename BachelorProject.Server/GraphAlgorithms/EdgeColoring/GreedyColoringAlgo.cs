@@ -89,7 +89,7 @@ namespace BachelorProject.Server.GraphAlgorithms.EdgeColoring
             {
                 NodeIds = nodeIds,
                 EdgeIds = resultEdgeIds.ToArray(),
-                GraphType = GraphHelpers.AlgoTypes.GreedyColoring,
+                AlgoType = GraphHelpers.AlgoTypes.GreedyColoring,
                 TotalWeight = usedColors.Count
             };
 

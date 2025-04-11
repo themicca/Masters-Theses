@@ -75,7 +75,7 @@ namespace BachelorProject.Server.GraphAlgorithms.EulerianGraph
                 NodeIds = path.ToArray(),
                 EdgeIds = matchingEdgeIds.ToArray(),
                 EulerType = graph.EulerType,
-                GraphType = GraphHelpers.AlgoTypes.Fleury
+                AlgoType = GraphHelpers.AlgoTypes.Fleury
             };
 
             GraphStepDto stepDto = new GraphStepDto

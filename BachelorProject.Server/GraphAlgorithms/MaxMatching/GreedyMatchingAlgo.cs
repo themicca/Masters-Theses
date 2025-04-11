@@ -59,7 +59,7 @@ namespace BachelorProject.Server.GraphAlgorithms.MaxMatching
             {
                 NodeIds = nodeIds,
                 EdgeIds = matchingEdgeIds.ToArray(),
-                GraphType = GraphHelpers.AlgoTypes.GreedyMatching
+                AlgoType = GraphHelpers.AlgoTypes.GreedyMatching
             };
 
             GraphStepDto resultDto = new GraphStepDto

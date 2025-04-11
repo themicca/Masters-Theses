@@ -2,7 +2,7 @@ import { Component, ElementRef, ViewChild } from '@angular/core';
 import { GraphResponseDataService } from '../../services/graph.response.data.service';
 import * as joint from 'jointjs';
 import { GraphRequest } from '../../models/graph-request.model';
-import { StepState } from '../../models/graph-steps-result.model';
+import { Step } from '../../models/graph-steps-result.model';
 import { GraphResult } from '../../models/graph-result.model';
 
 @Component({
@@ -30,7 +30,7 @@ export class GraphConstructFromBackendComponent {
     });
   }
 
-  private buildStepPapers(steps: StepState[], graphRequest: GraphRequest, graphType: string) {
+  private buildStepPapers(steps: Step[], graphRequest: GraphRequest, graphType: string) {
     this.stepsContainer.nativeElement.innerHTML = '';
 
     steps.forEach((step, index) => {
@@ -123,18 +123,18 @@ export class GraphConstructFromBackendComponent {
     });
   }
 
-  private reconstructGraph(resultGraph: GraphResult, graphRequest: GraphRequest, lastStep: StepState) {
+  private reconstructGraph(resultGraph: GraphResult, graphRequest: GraphRequest, lastStep: Step) {
     this.resultTextDiv.nativeElement.innerHTML = '';
     this.resultContainer.nativeElement.innerHTML = '';
 
-    this.resultText.nativeElement.innerText = `${resultGraph.graphType} Result`;
+    this.resultText.nativeElement.innerText = `${resultGraph.algoType} Result`;
 
     if (resultGraph.totalWeight != null) {
       let innerText = `Total Weight: ${resultGraph.totalWeight}`;
-      if (resultGraph.graphType == "Edmonds-Karp") {
+      if (resultGraph.algoType == "Edmonds-Karp") {
         innerText = `Total Flow: ${resultGraph.totalWeight}`;
       }
-      else if (resultGraph.graphType == "Welsh-Powell" || resultGraph.graphType == "Greedy Coloring") {
+      else if (resultGraph.algoType == "Welsh-Powell" || resultGraph.algoType == "Greedy Coloring") {
         innerText = `Used Colors: ${resultGraph.totalWeight}`;
       }
 
@@ -170,13 +170,13 @@ export class GraphConstructFromBackendComponent {
       circle.position(nodeObj.x, nodeObj.y);
       circle.resize(80, 80);
       circle.attr({
-        body: { fill: resultGraph.graphType == "Welsh-Powell" ? lastStep.nodeColors[nodeId] : '#3498db', stroke: '#2980b9', strokeWidth: 2 },
+        body: { fill: resultGraph.algoType == "Welsh-Powell" ? lastStep.nodeColors[nodeId] : '#3498db', stroke: '#2980b9', strokeWidth: 2 },
         label: { text: nodeObj.label, fill: '#ffffff', fontSize: 14 }
       });
       circle.addTo(graph);
       nodeMap.set(nodeObj.id, circle);
 
-      if (resultGraph.graphType === "Held-Karp") {
+      if (resultGraph.algoType === "Held-Karp") {
         const traversalIndex = resultGraph.nodeIds.indexOf(nodeId);
         let orderNumber = null;
 
@@ -228,7 +228,7 @@ export class GraphConstructFromBackendComponent {
       }
       link.attr({
         line: {
-          stroke: resultGraph.graphType == "Greedy Coloring" ? lastStep.edgeColors[edgeId] : 'black',
+          stroke: resultGraph.algoType == "Greedy Coloring" ? lastStep.edgeColors[edgeId] : 'black',
           strokeWidth: 3,
           targetMarker: graphRequest.isDirected ? { type: 'path' } : { type: 'none' }
         }

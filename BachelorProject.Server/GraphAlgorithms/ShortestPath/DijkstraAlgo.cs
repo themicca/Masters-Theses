@@ -158,7 +158,7 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
                 NodeIds = path.ToArray(),
                 EdgeIds = resultEdgeIds.ToArray(),
                 TotalWeight = totalWeight,
-                GraphType = GraphHelpers.AlgoTypes.Dijkstra
+                AlgoType = GraphHelpers.AlgoTypes.Dijkstra
             };
 
             GraphStepDto stepDto = new GraphStepDto

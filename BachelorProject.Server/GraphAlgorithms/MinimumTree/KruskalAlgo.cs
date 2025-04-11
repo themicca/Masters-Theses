@@ -88,7 +88,7 @@ namespace BachelorProject.Server.GraphAlgorithms.MinimumTree
             {
                 NodeIds = nodeIds,
                 EdgeIds = mstEdgeIds,
-                GraphType = GraphHelpers.AlgoTypes.Kruskal
+                AlgoType = GraphHelpers.AlgoTypes.Kruskal
             };
 
             return new GraphStepDto

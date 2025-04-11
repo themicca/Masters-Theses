@@ -94,7 +94,7 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
                 EdgeIds = flowEdgeIds.ToArray(),
                 TotalWeight = totalFlow,
                 EdgeResultWeights = new(snapshot.CurrentEdgeWeights),
-                GraphType = GraphHelpers.AlgoTypes.EdmondsKarp
+                AlgoType = GraphHelpers.AlgoTypes.EdmondsKarp
             };
 
             GraphStepDto stepDto = new GraphStepDto

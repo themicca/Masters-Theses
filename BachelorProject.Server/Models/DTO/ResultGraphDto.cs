@@ -7,6 +7,6 @@
         public int? TotalWeight { get; set; }
         public Dictionary<string, int?> EdgeResultWeights { get; set; } = [];
         public string? EulerType { get; set; } = null;
-        public string GraphType { get; set; } = string.Empty;
+        public string AlgoType { get; set; } = string.Empty;
     }
 }

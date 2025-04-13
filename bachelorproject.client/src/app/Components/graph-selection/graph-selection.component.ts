@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
+import { EDGE_COLOR_STROKE, HOVER_COLOR, NODE_COLOR_STROKE, SELECTED_COLOR } from '../../utils/constants';
 
 @Component({
   selector: 'app-graph-selection',
@@ -282,22 +283,22 @@ export class GraphSelectionComponent {
   }
 
   private selectNode(node: joint.dia.Element): void {
-    node.attr('body/stroke', 'red');
+    node.attr('body/stroke', SELECTED_COLOR);
     node.attr('body/strokeWidth', 3);
   }
 
   public highlightNode(node: joint.dia.Element): void {
-    node.attr('body/stroke', 'darkorange');
+    node.attr('body/stroke', HOVER_COLOR);
     node.attr('body/strokeWidth', 3);
   }
 
   public unhighlightNode(node: joint.dia.Element): void {
     if (this.selectedElements.includes(node)) {
-      node.attr('body/stroke', 'red');
+      node.attr('body/stroke', SELECTED_COLOR);
       node.attr('body/strokeWidth', 3);
     }
     else {
-      node.attr('body/stroke', '#2980b9');
+      node.attr('body/stroke', NODE_COLOR_STROKE);
       node.attr('body/strokeWidth', 2);
     }
   }
@@ -305,7 +306,7 @@ export class GraphSelectionComponent {
   private selectLink(link: joint.dia.Link): void {
     link.attr({
       line: {
-        stroke: 'red',
+        stroke: SELECTED_COLOR,
         strokeWidth: 3
       }
     });
@@ -314,7 +315,7 @@ export class GraphSelectionComponent {
   public highlightLink(link: joint.dia.Link): void {
     link.attr({
       line: {
-        stroke: 'darkorange',
+        stroke: HOVER_COLOR,
         strokeWidth: 3
       }
     });
@@ -324,7 +325,7 @@ export class GraphSelectionComponent {
     if (this.selectedElements.includes(link)) {
       link.attr({
         line: {
-          stroke: 'red',
+          stroke: SELECTED_COLOR,
           strokeWidth: 3
         }
       });
@@ -332,7 +333,7 @@ export class GraphSelectionComponent {
     else {
       link.attr({
         line: {
-          stroke: '#2c3e50',
+          stroke: EDGE_COLOR_STROKE,
           strokeWidth: 3
         }
       });

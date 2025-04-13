@@ -5,7 +5,7 @@ namespace BachelorProject.Server.GraphAlgorithms.EdgeColoring
 {
     public class GreedyColoringAlgo
     {
-        public static GraphStepDto SolveGraph(GraphDto graph, bool makeSnapshots)
+        public static GraphStepsResultDto SolveGraph(GraphDto graph, bool makeSnapshots)
         {
             string[] nodeIds = GraphDtoConvertor.ToNodeIdArray(graph);
             int n = nodeIds.Length;
@@ -24,7 +24,7 @@ namespace BachelorProject.Server.GraphAlgorithms.EdgeColoring
             for (int i = 0; i < maxColors; i++)
             {
                 double hue = (360.0 * i) / maxColors;
-                string hexColor = GraphHelpers.ColorFromHSV(hue, 0.8, 0.8);
+                string hexColor = GraphHelpers.ColorFromHSV(hue, GraphHelpers.SATURATION, GraphHelpers.VALUE);
                 colorList.Add(hexColor);
             }
 
@@ -85,18 +85,18 @@ namespace BachelorProject.Server.GraphAlgorithms.EdgeColoring
                 resultEdgeIds.Add(edgeId);
             }
 
-            ResultGraphDto resultGraph = new ResultGraphDto
+            GraphResultDto resultGraph = new GraphResultDto
             {
                 NodeIds = nodeIds,
                 EdgeIds = resultEdgeIds.ToArray(),
-                AlgoType = GraphHelpers.AlgoTypes.GreedyColoring,
+                AlgoType = GraphHelpers.AlgoTypes.GREEDY_COLORING,
                 TotalWeight = usedColors.Count
             };
 
-            GraphStepDto stepDto = new GraphStepDto
+            GraphStepsResultDto stepDto = new GraphStepsResultDto
             {
                 Steps = snapshot.Steps,
-                ResultGraph = resultGraph
+                GraphResult = resultGraph
             };
 
             return stepDto;

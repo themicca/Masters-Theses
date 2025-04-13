@@ -1,0 +1,9 @@
+<div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content">
+    <h3>{{ headerMessage }}</h3>
+    <ul>
+      <li *ngFor="let error of errors">{{ error }}</li>
+    </ul>
+    <button (click)="closeModal()">Click to dismis.</button>
+  </div>
+</div>

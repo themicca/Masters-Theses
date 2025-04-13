@@ -5,7 +5,7 @@ namespace BachelorProject.Server.GraphAlgorithms.MaxMatching
 {
     public class GreedyMatchingAlgo
     {
-        public static GraphStepDto SolveGraph(GraphDto graph, bool makeSnapshots)
+        public static GraphStepsResultDto SolveGraph(GraphDto graph, bool makeSnapshots)
         {
             string[] nodeIds = GraphDtoConvertor.ToNodeIdArray(graph);
             int n = nodeIds.Length;
@@ -29,16 +29,16 @@ namespace BachelorProject.Server.GraphAlgorithms.MaxMatching
                     if (match[j] != -1)
                         continue;
 
-                    if (edges[i][j] != 0 && edges[i][j] < GraphHelpers.MaxWeight)
+                    if (edges[i][j] != 0 && edges[i][j] < GraphHelpers.MAX_WEIGHT)
                     {
-                        snapshot.ColorEdge(i, j, GraphHelpers.ColorProcessing);
+                        snapshot.ColorEdge(i, j, GraphHelpers.COLOR_PROCESSING);
 
                         match[i] = j;
                         match[j] = i;
 
-                        snapshot.ColorNode(i, GraphHelpers.ColorResult);
-                        snapshot.ColorNode(j, GraphHelpers.ColorResult);
-                        snapshot.ColorEdge(i, j, GraphHelpers.ColorResult);
+                        snapshot.ColorNode(i, GraphHelpers.COLOR_RESULT);
+                        snapshot.ColorNode(j, GraphHelpers.COLOR_RESULT);
+                        snapshot.ColorEdge(i, j, GraphHelpers.COLOR_RESULT);
 
                         break;
                     }
@@ -55,17 +55,17 @@ namespace BachelorProject.Server.GraphAlgorithms.MaxMatching
                 }
             }
 
-            ResultGraphDto resultGraph = new ResultGraphDto
+            GraphResultDto resultGraph = new GraphResultDto
             {
                 NodeIds = nodeIds,
                 EdgeIds = matchingEdgeIds.ToArray(),
-                AlgoType = GraphHelpers.AlgoTypes.GreedyMatching
+                AlgoType = GraphHelpers.AlgoTypes.GREEDY_MATCHING
             };
 
-            GraphStepDto resultDto = new GraphStepDto
+            GraphStepsResultDto resultDto = new GraphStepsResultDto
             {
                 Steps = snapshot.Steps,
-                ResultGraph = resultGraph
+                GraphResult = resultGraph
             };
 
             return resultDto;

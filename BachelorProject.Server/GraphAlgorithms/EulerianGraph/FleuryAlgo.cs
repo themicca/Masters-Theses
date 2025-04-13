@@ -5,7 +5,7 @@ namespace BachelorProject.Server.GraphAlgorithms.EulerianGraph
 {
     public class FleuryAlgo
     {
-        public static GraphStepDto SolveGraph(GraphDto graph, bool makeSnapshots)
+        public static GraphStepsResultDto SolveGraph(GraphDto graph, bool makeSnapshots)
         {
             string[] nodes = GraphDtoConvertor.ToNodeIdArray(graph);
             int[][] matrix = GraphDtoConvertor.ToAdjacencyMatrix(graph);
@@ -49,7 +49,7 @@ namespace BachelorProject.Server.GraphAlgorithms.EulerianGraph
 
             HashSet<int> visitedNodes = new HashSet<int>();
             startIndex = eulerPath[^1];
-            snapshot.ColorNode(startIndex, GraphHelpers.ColorResult);
+            snapshot.ColorNode(startIndex, GraphHelpers.COLOR_RESULT);
             visitedNodes.Add(startIndex);
 
             List<string> matchingEdgeIds = new List<string>();
@@ -58,11 +58,11 @@ namespace BachelorProject.Server.GraphAlgorithms.EulerianGraph
                 int u = eulerPath[eulerPath.Count - 1 - i];
                 int v = eulerPath[eulerPath.Count - 2 - i];
 
-                snapshot.ColorEdge(u, v, GraphHelpers.ColorResult);
+                snapshot.ColorEdge(u, v, GraphHelpers.COLOR_RESULT);
 
                 if (!visitedNodes.Contains(v))
                 {
-                    snapshot.ColorNode(v, GraphHelpers.ColorResult);
+                    snapshot.ColorNode(v, GraphHelpers.COLOR_RESULT);
                     visitedNodes.Add(v);
                 }
 
@@ -70,18 +70,18 @@ namespace BachelorProject.Server.GraphAlgorithms.EulerianGraph
                 matchingEdgeIds.Add(edgeId ?? Guid.NewGuid().ToString());
             }
 
-            ResultGraphDto resultGraph = new ResultGraphDto
+            GraphResultDto resultGraph = new GraphResultDto
             {
                 NodeIds = path.ToArray(),
                 EdgeIds = matchingEdgeIds.ToArray(),
                 EulerType = graph.EulerType,
-                AlgoType = GraphHelpers.AlgoTypes.Fleury
+                AlgoType = GraphHelpers.AlgoTypes.FELURY
             };
 
-            GraphStepDto stepDto = new GraphStepDto
+            GraphStepsResultDto stepDto = new GraphStepsResultDto
             {
                 Steps = snapshot.Steps,
-                ResultGraph = resultGraph
+                GraphResult = resultGraph
             };
 
             return stepDto;
@@ -97,7 +97,7 @@ namespace BachelorProject.Server.GraphAlgorithms.EulerianGraph
                     if (IsValidNextEdge(u, v, tempEdges, nodesCount, directed))
                     {
                         RemoveEdge(u, v, tempEdges, directed);
-                        snapshot.ColorEdge(u, v, GraphHelpers.ColorProcessed);
+                        snapshot.ColorEdge(u, v, GraphHelpers.COLOR_PROCESSED);
                         FleuryUtil(v, tempEdges, eulerPath, nodesCount, snapshot, nodes, directed);
                     }
                 }

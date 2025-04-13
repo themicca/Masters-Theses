@@ -1,9 +1,11 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { GraphResponseDataService } from '../../services/graph.response.data.service';
 import * as joint from 'jointjs';
-import { GraphRequest } from '../../models/graph-request.model';
+import { Graph } from '../../models/graph.model';
 import { Step } from '../../models/graph-steps-result.model';
 import { GraphResult } from '../../models/graph-result.model';
+import { EDGE_COLOR_STROKE, LABEL_COLOR_BLACK, LABEL_COLOR_WHITE, NODE_COLOR_FILL, NODE_COLOR_STROKE, PAPER_BACKGROUND_COLOR, PAPER_HEIGHT } from '../../utils/constants';
+import { Utils } from '../../utils/utils';
 
 @Component({
   selector: 'app-graph-construct-from-backend',
@@ -21,30 +23,30 @@ export class GraphConstructFromBackendComponent {
   ngOnInit() {
     this.graphResponseDataService.graphData$.subscribe(data => {
       if (data) {
-        const { response, graphData: graphRequest } = data;
+        const { response, graphData: graph } = data;
         console.log('Graph data arrived in Reconstructor:', data);
 
-        this.buildStepPapers(response.steps, graphRequest, response.resultGraph.graphType);
-        this.reconstructGraph(response.resultGraph, graphRequest, response.steps[response.steps.length - 1]);
+        this.buildStepPapers(response.steps, graph, response.graphResult.algoType);
+        this.reconstructGraph(response.graphResult, graph, response.steps[response.steps.length - 1]);
       }
     });
   }
 
-  private buildStepPapers(steps: Step[], graphRequest: GraphRequest, graphType: string) {
+  private buildStepPapers(steps: Step[], graph: Graph, algoType: string) {
     this.stepsContainer.nativeElement.innerHTML = '';
 
     steps.forEach((step, index) => {
       const stepWrapper = document.createElement('div');
       stepWrapper.classList.add('step-wrapper');
-      stepWrapper.innerHTML = `<h3>${graphType} Step ${index + 1}</h3>`;
+      stepWrapper.innerHTML = `<h3>${algoType}${graph.eulerType ? " " + graph.eulerType : ""} Step ${index + 1}</h3>`;
       this.stepsContainer.nativeElement.appendChild(stepWrapper);
       
       if (step.currentTotalWeight != null) {
         let innerText = `Current Total Weight: ${step.currentTotalWeight}`;
-        if (graphType == "Edmonds-Karp") {
+        if (algoType == "Edmonds-Karp") {
           innerText = `Current Total Flow: ${step.currentTotalWeight}`;
         }
-        else if (graphType == "Welsh-Powell" || graphType == "Greedy Coloring") {
+        else if (algoType == "Welsh-Powell" || algoType == "Greedy Coloring") {
           innerText = `Current Used Colors: ${step.currentTotalWeight}`;
         }
 
@@ -57,7 +59,7 @@ export class GraphConstructFromBackendComponent {
       
       const paperDiv = document.createElement('div');
       paperDiv.style.width = '100%';
-      paperDiv.style.height = '650px';
+      paperDiv.style.height = `${PAPER_HEIGHT}px`;
       paperDiv.style.marginBottom = '20px';
       paperDiv.style.margin = '0 auto';
       paperDiv.style.border = '1px solid #ccc';
@@ -68,28 +70,28 @@ export class GraphConstructFromBackendComponent {
         el: paperDiv,
         model: stepGraph,
         width: '95%',
-        height: 650,
+        height: PAPER_HEIGHT,
         gridSize: 10,
         drawGrid: true,
-        background: { color: '#f8f9fa' }
+        background: { color: PAPER_BACKGROUND_COLOR }
       });
       
       const nodeMap = new Map<string, joint.dia.Element>();
-      graphRequest.nodes.forEach(nodeObj => {
+      graph.nodes.forEach(nodeObj => {
         const circle = new joint.shapes.standard.Circle();
         circle.position(nodeObj.x, nodeObj.y);
         circle.resize(80, 80);
-        const color = step.nodeColors[nodeObj.id] || '#3498db';
+        const color = step.nodeColors[nodeObj.id] || NODE_COLOR_FILL;
         circle.attr({
-          body: { fill: color, stroke: '#2980b9', strokeWidth: 2 },
-          label: { text: nodeObj.label, fill: '#ffffff', fontSize: 14 }
+          body: { fill: color, stroke: NODE_COLOR_STROKE, strokeWidth: 2 },
+          label: { text: nodeObj.label, fill: LABEL_COLOR_WHITE, fontSize: 14 }
         });
         circle.addTo(stepGraph);
         nodeMap.set(nodeObj.id, circle);
       });
       
-      graphRequest.edges.forEach(edgeObj => {
-        const color = step.edgeColors[edgeObj.id] || 'black';
+      graph.edges.forEach(edgeObj => {
+        const color = step.edgeColors[edgeObj.id] || EDGE_COLOR_STROKE;
         const sourceEl = nodeMap.get(edgeObj.sourceNodeId);
         const targetEl = nodeMap.get(edgeObj.targetNodeId);
         if (!sourceEl || !targetEl) return;
@@ -103,11 +105,11 @@ export class GraphConstructFromBackendComponent {
         const link = new joint.shapes.standard.Link();
         link.source(sourceEl);
         link.target(targetEl);
-        if (graphRequest.isWeighted) {
+        if (graph.isWeighted) {
           link.labels([{
             position: 0.5,
             attrs: {
-              text: { text: labelText, fill: 'black' }
+              text: { text: labelText, fill: LABEL_COLOR_BLACK }
             }
           }]);
         }
@@ -115,27 +117,29 @@ export class GraphConstructFromBackendComponent {
           line: {
             stroke: color,
             strokeWidth: 3,
-            targetMarker: graphRequest.isDirected ? { type: 'path' } : { type: 'none' }
+            targetMarker: graph.isDirected ? { type: 'path' } : { type: 'none' }
           }
         });
         link.addTo(stepGraph);
       });
+
+      Utils.offSetOppositeLinks(stepGraph);
     });
   }
 
-  private reconstructGraph(resultGraph: GraphResult, graphRequest: GraphRequest, lastStep: Step) {
+  private reconstructGraph(graphResult: GraphResult, graph: Graph, lastStep: Step) {
     this.resultTextDiv.nativeElement.innerHTML = '';
     this.resultContainer.nativeElement.innerHTML = '';
 
-    this.resultText.nativeElement.innerText = `${resultGraph.algoType} Result`;
+    this.resultText.nativeElement.innerText = `${graphResult.algoType}${graph.eulerType ? " " + graph.eulerType : ""} Result`;
 
-    if (resultGraph.totalWeight != null) {
-      let innerText = `Total Weight: ${resultGraph.totalWeight}`;
-      if (resultGraph.algoType == "Edmonds-Karp") {
-        innerText = `Total Flow: ${resultGraph.totalWeight}`;
+    if (graphResult.totalWeight != null) {
+      let innerText = `Total Weight: ${graphResult.totalWeight}`;
+      if (graphResult.algoType == "Edmonds-Karp") {
+        innerText = `Total Flow: ${graphResult.totalWeight}`;
       }
-      else if (resultGraph.algoType == "Welsh-Powell" || resultGraph.algoType == "Greedy Coloring") {
-        innerText = `Used Colors: ${resultGraph.totalWeight}`;
+      else if (graphResult.algoType == "Welsh-Powell" || graphResult.algoType == "Greedy Coloring") {
+        innerText = `Used Colors: ${graphResult.totalWeight}`;
       }
 
       const totalWeightHeader = document.createElement('div');
@@ -147,43 +151,43 @@ export class GraphConstructFromBackendComponent {
     
     const paperDiv = document.createElement('div');
     paperDiv.style.width = '100%';
-    paperDiv.style.height = '650px';
+    paperDiv.style.height = `${PAPER_HEIGHT}px`;
     this.resultContainer.nativeElement.appendChild(paperDiv);
 
-    const graph = new joint.dia.Graph();
+    const resultGraph = new joint.dia.Graph();
     const paper = new joint.dia.Paper({
       el: paperDiv,
-      model: graph,
+      model: resultGraph,
       width: '100%',
-      height: 650,
+      height: PAPER_HEIGHT,
       gridSize: 10,
       drawGrid: true,
-      background: { color: '#f8f9fa' }
+      background: { color: PAPER_BACKGROUND_COLOR }
     });
     
     const nodeMap = new Map<string, joint.dia.Element>();
 
-    resultGraph.nodeIds.forEach(nodeId => {
-      const nodeObj = graphRequest.nodes.find(n => n.id === nodeId);
+    graphResult.nodeIds.forEach(nodeId => {
+      const nodeObj = graph.nodes.find(n => n.id === nodeId);
       if (!nodeObj) return;
       const circle = new joint.shapes.standard.Circle();
       circle.position(nodeObj.x, nodeObj.y);
       circle.resize(80, 80);
       circle.attr({
-        body: { fill: resultGraph.algoType == "Welsh-Powell" ? lastStep.nodeColors[nodeId] : '#3498db', stroke: '#2980b9', strokeWidth: 2 },
-        label: { text: nodeObj.label, fill: '#ffffff', fontSize: 14 }
+        body: { fill: graphResult.algoType == "Welsh-Powell" ? lastStep.nodeColors[nodeId] : NODE_COLOR_FILL, stroke: NODE_COLOR_STROKE, strokeWidth: 2 },
+        label: { text: nodeObj.label, fill: LABEL_COLOR_WHITE, fontSize: 14 }
       });
-      circle.addTo(graph);
+      circle.addTo(resultGraph);
       nodeMap.set(nodeObj.id, circle);
 
-      if (resultGraph.algoType === "Held-Karp") {
-        const traversalIndex = resultGraph.nodeIds.indexOf(nodeId);
+      if (graphResult.algoType === "Held-Karp") {
+        const traversalIndex = graphResult.nodeIds.indexOf(nodeId);
         let orderNumber = null;
 
         if (traversalIndex > 0) {
           orderNumber = traversalIndex;
         } else if (traversalIndex === 0) {
-          orderNumber = resultGraph.nodeIds.length - 1;
+          orderNumber = graphResult.nodeIds.length - 1;
         }
 
         if (orderNumber !== null) {
@@ -193,17 +197,17 @@ export class GraphConstructFromBackendComponent {
           text.attr({
             label: {
               text: orderNumber.toString(),
-              fill: '#000000',
+              fill: LABEL_COLOR_BLACK,
               fontSize: 14
             }
           });
-          text.addTo(graph);
+          text.addTo(resultGraph);
         }
       }
     });
 
-    resultGraph.edgeIds.forEach(edgeId => {
-      const edgeObj = graphRequest.edges.find(e => e.id === edgeId);
+    graphResult.edgeIds.forEach(edgeId => {
+      const edgeObj = graph.edges.find(e => e.id === edgeId);
       if (!edgeObj) return;
       const sourceEl = nodeMap.get(edgeObj.sourceNodeId);
       const targetEl = nodeMap.get(edgeObj.targetNodeId);
@@ -211,29 +215,31 @@ export class GraphConstructFromBackendComponent {
 
       const originalWeight = edgeObj.weight;
       let labelText = originalWeight.toString();
-      if (resultGraph.edgeResultWeights && resultGraph.edgeResultWeights[edgeObj.id] != null) {
-        labelText = `${resultGraph.edgeResultWeights[edgeObj.id]}/${originalWeight}`;
+      if (graphResult.edgeResultWeights && graphResult.edgeResultWeights[edgeObj.id] != null) {
+        labelText = `${graphResult.edgeResultWeights[edgeObj.id]}/${originalWeight}`;
       }
 
       const link = new joint.shapes.standard.Link();
       link.source(sourceEl);
       link.target(targetEl);
-      if (graphRequest.isWeighted) {
+      if (graph.isWeighted) {
         link.labels([{
           position: 0.5,
           attrs: {
-            text: { text: labelText, fill: 'black' }
+            text: { text: labelText, fill: LABEL_COLOR_BLACK }
           }
         }]);
       }
       link.attr({
         line: {
-          stroke: resultGraph.algoType == "Greedy Coloring" ? lastStep.edgeColors[edgeId] : 'black',
+          stroke: graphResult.algoType == "Greedy Coloring" ? lastStep.edgeColors[edgeId] : EDGE_COLOR_STROKE,
           strokeWidth: 3,
-          targetMarker: graphRequest.isDirected ? { type: 'path' } : { type: 'none' }
+          targetMarker: graph.isDirected ? { type: 'path' } : { type: 'none' }
         }
       });
-      link.addTo(graph);
+      link.addTo(resultGraph);
     });
+
+    Utils.offSetOppositeLinks(resultGraph);
   }
 }

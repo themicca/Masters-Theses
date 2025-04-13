@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
-import { GraphRequest } from '../models/graph-request.model';
+import { Graph } from '../models/graph.model';
 import { Observable, throwError } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { GraphNode } from '../models/graph-node.model';
-import { GraphEdge } from '../models/graph-edge.model';
-import { GraghStepsResult } from '../models/graph-steps-result.model';
+import { Node } from '../models/node.model';
+import { Edge } from '../models/edge.model';
+import { GraphStepsResult } from '../models/graph-steps-result.model';
+import { MAX_NODES, MAX_NODES_HELD_KARP } from '../utils/constants';
 
 @Injectable({
   providedIn: 'root'
@@ -13,8 +14,8 @@ export class GraphService {
   private graph!: joint.dia.Graph;
   private src: string | null = null;
   private target: string | null = null;
-  private nodes!: GraphNode[];
-  private edges!: GraphEdge[];
+  private nodes!: Node[];
+  private edges!: Edge[];
   private directed!: boolean;
   private eulerType: string = "";
   
@@ -22,7 +23,7 @@ export class GraphService {
 
   constructor(private http: HttpClient) { }
 
-  runAlgo(algo: string, model: GraphRequest): Observable<GraghStepsResult> {
+  runAlgo(algo: string, model: Graph): Observable<GraphStepsResult> {
     switch (algo) {
       case "Dijkstra":
         return this.runDijkstra(model);
@@ -45,41 +46,41 @@ export class GraphService {
     }
   }
 
-  runDijkstra(model: GraphRequest): Observable<GraghStepsResult> {
-    return this.http.post<GraghStepsResult>('https://localhost:7130/api/Dijkstra', model);
+  runDijkstra(model: Graph): Observable<GraphStepsResult> {
+    return this.http.post<GraphStepsResult>('https://localhost:7130/api/Dijkstra', model);
   }
 
-  runEdmondsKarp(model: GraphRequest): Observable<GraghStepsResult> {
-    return this.http.post<GraghStepsResult>('https://localhost:7130/api/EdmondsKarp', model);
+  runEdmondsKarp(model: Graph): Observable<GraphStepsResult> {
+    return this.http.post<GraphStepsResult>('https://localhost:7130/api/EdmondsKarp', model);
   }
 
-  runHeldKarp(model: GraphRequest): Observable<GraghStepsResult> {
-    return this.http.post<GraghStepsResult>('https://localhost:7130/api/HeldKarp', model);
+  runHeldKarp(model: Graph): Observable<GraphStepsResult> {
+    return this.http.post<GraphStepsResult>('https://localhost:7130/api/HeldKarp', model);
   }
 
-  runKruskal(model: GraphRequest): Observable<GraghStepsResult> {
-    return this.http.post<GraghStepsResult>('https://localhost:7130/api/Kruskal', model);
+  runKruskal(model: Graph): Observable<GraphStepsResult> {
+    return this.http.post<GraphStepsResult>('https://localhost:7130/api/Kruskal', model);
   }
 
-  runFleury(model: GraphRequest): Observable<GraghStepsResult> {
+  runFleury(model: Graph): Observable<GraphStepsResult> {
     model.src = this.src;
     model.eulerType = this.eulerType;
-    return this.http.post<GraghStepsResult>('https://localhost:7130/api/Fleury', model);
+    return this.http.post<GraphStepsResult>('https://localhost:7130/api/Fleury', model);
   }
 
-  runGreedyMatching(model: GraphRequest): Observable<GraghStepsResult> {
-    return this.http.post<GraghStepsResult>('https://localhost:7130/api/GreedyMatching', model);
+  runGreedyMatching(model: Graph): Observable<GraphStepsResult> {
+    return this.http.post<GraphStepsResult>('https://localhost:7130/api/GreedyMatching', model);
   }
 
-  runGreedyColoring(model: GraphRequest): Observable<GraghStepsResult> {
-    return this.http.post<GraghStepsResult>('https://localhost:7130/api/GreedyColoring', model);
+  runGreedyColoring(model: Graph): Observable<GraphStepsResult> {
+    return this.http.post<GraphStepsResult>('https://localhost:7130/api/GreedyColoring', model);
   }
 
-  runWelshPowell(model: GraphRequest): Observable<GraghStepsResult> {
-    return this.http.post<GraghStepsResult>('https://localhost:7130/api/WelshPowell', model);
+  runWelshPowell(model: Graph): Observable<GraphStepsResult> {
+    return this.http.post<GraphStepsResult>('https://localhost:7130/api/WelshPowell', model);
   }
 
-  validate(algo: string, graph: joint.dia.Graph, model: GraphRequest): string[]
+  validate(algo: string, graph: joint.dia.Graph, model: Graph): string[]
   {
     this.src = model.src;
     this.graph = graph;
@@ -146,10 +147,18 @@ export class GraphService {
       }
       return false;
     });
+
+    if (this.graph.getElements().length >= MAX_NODES_HELD_KARP) {
+      this.errors.push(`Held-Karp cannot be run with more than ${MAX_NODES_HELD_KARP} nodes for performance reasons.`);
+    }
     
     const matrix = this.buildAdjacencyMatrix(this.nodes, this.edges);
 
-    if (!this.hasHamiltonianCycle(matrix)) {
+    const visited: boolean[] = new Array(matrix.length).fill(false);
+    visited[0] = true;
+
+    this.isGraphConnected();
+    if (!this.hamiltonianCycle(matrix, 0, 0, visited, 1)) {
       this.errors.push('Graph does not contain a Hamiltonian Cycle.');
     }
   }
@@ -177,15 +186,17 @@ export class GraphService {
       }
       return false;
     });
+    this.isSourceToSinkReachable();
   }
 
   validateFleury() {
     this.src = null;
 
-    if (!this.directed) {
-      this.errors.push('Requires directed graph.');
+    if (this.directed) {
+      this.errors.push('Requires undirected graph.');
     }
 
+    this.isGraphConnected();
     this.eulerGraphConditionsCheck();
   }
 
@@ -288,7 +299,7 @@ export class GraphService {
     }
   }
 
-  private buildAdjacencyMatrix(nodes: GraphNode[], edges: GraphEdge[]): number[][] {
+  private buildAdjacencyMatrix(nodes: Node[], edges: Edge[]): number[][] {
     const n = nodes.length;
     const nodeIndexMap = new Map<string, number>();
     nodes.forEach((node, index) => {
@@ -311,7 +322,7 @@ export class GraphService {
     return matrix;
   }
   
-  private hamiltonianCycleUtil(
+  private hamiltonianCycle(
     matrix: number[][],
     start: number,
     current: number,
@@ -327,7 +338,7 @@ export class GraphService {
     for (let next = 0; next < n; next++) {
       if (!visited[next] && matrix[current][next] !== 0) {
         visited[next] = true;
-        if (this.hamiltonianCycleUtil(matrix, start, next, visited, count + 1)) {
+        if (this.hamiltonianCycle(matrix, start, next, visited, count + 1)) {
           return true;
         }
         visited[next] = false;
@@ -335,15 +346,80 @@ export class GraphService {
     }
     return false;
   }
-  
-  private hasHamiltonianCycle(matrix: number[][]): boolean {
-    const n = matrix.length;
-    if (n === 0) {
-      return false;
+
+  public isGraphConnected() {
+    console.log(this.nodes.length);
+    if (this.nodes.length <= 1) {
+      return;
+    }
+    
+    const visited = new Set<string>();
+    const queue: string[] = [];
+    
+    const startNode = this.nodes[0].id;
+    visited.add(startNode);
+    queue.push(startNode);
+    
+    const adjacencyMap = new Map<string, string[]>();
+    
+    this.nodes.forEach(node => {
+      adjacencyMap.set(node.id, []);
+    });
+
+    this.edges.forEach(edge => {
+      adjacencyMap.get(edge.sourceNodeId)?.push(edge.targetNodeId);
+      adjacencyMap.get(edge.targetNodeId)?.push(edge.sourceNodeId);
+    });
+
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      const neighbors = adjacencyMap.get(current) || [];
+      for (const neighbor of neighbors) {
+        if (!visited.has(neighbor)) {
+          visited.add(neighbor);
+          queue.push(neighbor);
+        }
+      }
+    }
+    
+    if (visited.size != this.nodes.length)
+      this.errors.push("Connected graph required.");
+  }
+
+  public isSourceToSinkReachable() {
+    if (!this.src || !this.target) {
+      return;
     }
 
-    const visited: boolean[] = new Array(n).fill(false);
-    visited[0] = true;
-    return this.hamiltonianCycleUtil(matrix, 0, 0, visited, 1);
+    const visited = new Set<string>();
+    const queue: string[] = [];
+
+    queue.push(this.src);
+    visited.add(this.src);
+
+    const adjacencyMap = new Map<string, string[]>();
+    this.nodes.forEach(node => {
+      adjacencyMap.set(node.id, []);
+    });
+
+    this.edges.forEach(edge => {
+      adjacencyMap.get(edge.sourceNodeId)?.push(edge.targetNodeId);
+    });
+
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      if (current === this.target) {
+        return;
+      }
+
+      for (const neighbor of adjacencyMap.get(current) || []) {
+        if (!visited.has(neighbor)) {
+          visited.add(neighbor);
+          queue.push(neighbor);
+        }
+      }
+    }
+
+    this.errors.push("No path from source to sink exists.");
   }
 }

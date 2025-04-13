@@ -22,7 +22,7 @@ namespace BachelorProject.Server.GraphAlgorithms.MinimumTree
             }
         }
 
-        public static GraphStepDto SolveGraph(GraphDto graph, bool makeSnapshots)
+        public static GraphStepsResultDto SolveGraph(GraphDto graph, bool makeSnapshots)
         {
 
             string[] nodeIds = GraphDtoConvertor.ToNodeIdArray(graph);
@@ -38,7 +38,7 @@ namespace BachelorProject.Server.GraphAlgorithms.MinimumTree
             List<Edge> allEdges = new List<Edge>();
             foreach (var (edgeId, sourceId, targetId, weight) in edgeList)
             {
-                if (weight == 0 || weight >= GraphHelpers.MaxWeight)
+                if (weight == 0 || weight >= GraphHelpers.MAX_WEIGHT)
                     continue;
 
                 if (!nodeIndexMap.TryGetValue(sourceId, out int fromIndex))
@@ -64,7 +64,7 @@ namespace BachelorProject.Server.GraphAlgorithms.MinimumTree
 
             foreach (var edge in allEdges)
             {
-                snapshot.ColorEdge(edge.From, edge.To, GraphHelpers.ColorProcessing);
+                snapshot.ColorEdge(edge.From, edge.To, GraphHelpers.COLOR_PROCESSING);
 
                 int root1 = Find(parent, edge.From);
                 int root2 = Find(parent, edge.To);
@@ -74,27 +74,27 @@ namespace BachelorProject.Server.GraphAlgorithms.MinimumTree
                     mstEdges.Add(edge);
                     Union(parent, root1, root2);
 
-                    snapshot.ColorEdge(edge.From, edge.To, GraphHelpers.ColorResult);
+                    snapshot.ColorEdge(edge.From, edge.To, GraphHelpers.COLOR_RESULT);
                 }
                 else
                 {
-                    snapshot.ColorEdge(edge.From, edge.To, GraphHelpers.ColorDiscarded);
+                    snapshot.ColorEdge(edge.From, edge.To, GraphHelpers.COLOR_DIRECTED);
                 }
             }
 
             var mstEdgeIds = mstEdges.Select(e => e.OriginalEdgeId).ToArray();
 
-            var resultGraph = new ResultGraphDto
+            var resultGraph = new GraphResultDto
             {
                 NodeIds = nodeIds,
                 EdgeIds = mstEdgeIds,
-                AlgoType = GraphHelpers.AlgoTypes.Kruskal
+                AlgoType = GraphHelpers.AlgoTypes.KRUSKAL
             };
 
-            return new GraphStepDto
+            return new GraphStepsResultDto
             {
                 Steps = snapshot.Steps,
-                ResultGraph = resultGraph
+                GraphResult = resultGraph
             };
         }
 

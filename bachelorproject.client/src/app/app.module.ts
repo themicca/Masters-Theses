@@ -13,6 +13,7 @@ import { EdgeWeightComponent } from './Components/edge-weight/edge-weight.compon
 import { EdgesConnectionComponent } from './Components/edges-connection/edges-connection.component';
 import { RenameNodesComponent } from './Components/rename-nodes/rename-nodes.component';
 import { TooltipComponent } from './Components/tooltip/tooltip.component';
+import { ErrorPopupComponent } from './Components/error-popup/error-popup.component';
 
 @NgModule({
   declarations: [
@@ -24,7 +25,8 @@ import { TooltipComponent } from './Components/tooltip/tooltip.component';
     EdgeWeightComponent,
     EdgesConnectionComponent,
     RenameNodesComponent,
-    TooltipComponent
+    TooltipComponent,
+    ErrorPopupComponent
   ],
   imports: [
     BrowserModule, HttpClientModule,

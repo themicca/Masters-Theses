@@ -1,8 +1,8 @@
 import { GraphResult } from "./graph-result.model";
 
-export interface GraghStepsResult {
+export interface GraphStepsResult {
   steps: Step[],
-  resultGraph: GraphResult,
+  graphResult: GraphResult,
 }
 
 export interface Step {

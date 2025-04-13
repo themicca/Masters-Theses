@@ -10,13 +10,3 @@
     <button #buttonWelshPowell (click)="onSubmit('Welsh-Powell')">Run Welsh-Powell</button>
   </div>
 </div>
-
-<div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
-  <div class="modal-content">
-    <h3>Cannot run {{ algo }} for these reasons:</h3>
-    <ul>
-      <li *ngFor="let error of errors">{{ error }}</li>
-    </ul>
-    <button (click)="closeModal()">Click to dismis.</button>
-  </div>
-</div>

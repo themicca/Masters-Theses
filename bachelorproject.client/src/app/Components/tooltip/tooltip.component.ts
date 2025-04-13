@@ -102,6 +102,7 @@ export class TooltipComponent {
       Requires:
       - Start node
       - Non negative edge weights
+      - Connected graph
       - Hamiltonian cycle must exist
 
       Assumes complete graph, if complete graph is not provided, it uses dijkstra to fill the edge matrix with missing weights.`

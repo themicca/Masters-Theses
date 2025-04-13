@@ -1,12 +1,13 @@
 import { Component, ElementRef, Input, OnDestroy, ViewChild } from '@angular/core';
-import { GraphRequest } from '../../models/graph-request.model';
+import { Graph } from '../../models/graph.model';
 import { GraphService } from '../../services/graph.service';
 import { Subscription } from 'rxjs';
 import { GraphResponseDataService } from '../../services/graph.response.data.service';
 import { v4 as uuidv4 } from 'uuid';
-import { GraphNode } from '../../models/graph-node.model';
-import { GraphEdge } from '../../models/graph-edge.model';
-import { GraghStepsResult } from '../../models/graph-steps-result.model';
+import { Node } from '../../models/node.model';
+import { Edge } from '../../models/edge.model';
+import { GraphStepsResult } from '../../models/graph-steps-result.model';
+import { GraphErrorsService } from '../../services/graph-errors.service';
 
 @Component({
   selector: 'app-graph-submit',
@@ -28,18 +29,16 @@ export class GraphSubmitComponent implements OnDestroy {
   @Input() graphTarget: joint.dia.Element | null = null;
   @Input() directed!: boolean;
   @Input() weighted!: boolean;
-
-  showModal = false;
-  algo: string = "Algo";
+  
   errors: string[] = [];
 
   private addGraphSubscription?: Subscription
-  
-  constructor(private graphService: GraphService, private graphResponseDataSerivce: GraphResponseDataService) { }
 
-  private extractGraphData(): GraphRequest {
+  constructor(private graphService: GraphService, private graphResponseDataSerivce: GraphResponseDataService, private errorsService: GraphErrorsService) { }
+
+  private extractGraphData(): Graph {
     const elements = this.graph.getElements();
-    const nodes: GraphNode[] = elements.map((node: joint.dia.Element) => ({
+    const nodes: Node[] = elements.map((node: joint.dia.Element) => ({
       id: node.id.toString(),
       label: node.attr('label/text') || `Node-${node.id}`,
       x: node.position().x,
@@ -49,7 +48,7 @@ export class GraphSubmitComponent implements OnDestroy {
     }));
 
     const links = this.graph.getLinks();
-    const edges: GraphEdge[] = links.map((link: joint.dia.Link) => {
+    const edges: Edge[] = links.map((link: joint.dia.Link) => {
       const sourceElement = link.getSourceElement();
       const targetElement = link.getTargetElement();
       return {
@@ -59,7 +58,7 @@ export class GraphSubmitComponent implements OnDestroy {
         weight: link.attr('weight') || 1
       };
     });
-    const graphModel: GraphRequest = {
+    const graphModel: Graph = {
       id: uuidv4(),
       name: "",
       nodes: nodes,
@@ -77,27 +76,21 @@ export class GraphSubmitComponent implements OnDestroy {
     this.errors = this.graphService.validate(algo, this.graph, graphData);
     
     if (this.errors.length > 0) {
-      this.algo = algo;
-      this.showModal = true;
+      this.errorsService.updateErrors(this.errors, algo);
       return;
     }
 
     this.addGraphSubscription = this.graphService.runAlgo(algo, graphData).subscribe({
-      next: (response: GraghStepsResult) => {
+      next: (response: GraphStepsResult) => {
         console.log('Received Processed Graph:', response);
         this.graphResponseDataSerivce.updateGraphData(response, graphData);
       },
       error: (error) => {
         console.error('Error sending graph data:', error);
         this.errors.push(error.error);
-        this.algo = algo;
-        this.showModal = true;
+        this.errorsService.updateErrors(this.errors, algo)
       }
     });
-  }
-
-  closeModal() {
-    this.showModal = false;
   }
 
   ngOnDestroy(): void {

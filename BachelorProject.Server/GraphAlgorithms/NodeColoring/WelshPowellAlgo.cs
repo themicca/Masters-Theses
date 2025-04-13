@@ -5,7 +5,7 @@ namespace BachelorProject.Server.GraphAlgorithms.NodeColoring
 {
     public class WelshPowellAlgo
     {
-        public static GraphStepDto SolveGraph(GraphDto graph, bool makeSnapshots)
+        public static GraphStepsResultDto SolveGraph(GraphDto graph, bool makeSnapshots)
         {
             int[][] matrix = GraphDtoConvertor.ToAdjacencyMatrix(graph);
             string[] nodes = GraphDtoConvertor.ToNodeIdArray(graph);
@@ -55,18 +55,18 @@ namespace BachelorProject.Server.GraphAlgorithms.NodeColoring
                 }
             }
 
-            ResultGraphDto resultGraph = new ResultGraphDto
+            GraphResultDto resultGraph = new GraphResultDto
             {
                 NodeIds = nodes,
                 EdgeIds = GraphDtoConvertor.ToEdgeIdArray(graph),
-                AlgoType = GraphHelpers.AlgoTypes.WelshPowell,
+                AlgoType = GraphHelpers.AlgoTypes.WELSH_POWELL,
                 TotalWeight = currentColor
             };
 
-            GraphStepDto stepDto = new GraphStepDto
+            GraphStepsResultDto stepDto = new GraphStepsResultDto
             {
                 Steps = snapshot.Steps,
-                ResultGraph = resultGraph
+                GraphResult = resultGraph
             };
 
             return stepDto;
@@ -85,7 +85,7 @@ namespace BachelorProject.Server.GraphAlgorithms.NodeColoring
         private static string GetColorFromIndex(int colorIndex, int totalColors)
         {
             double hue = (360.0 * colorIndex) / totalColors;
-            return GraphHelpers.ColorFromHSV(hue, 0.8, 0.8);
+            return GraphHelpers.ColorFromHSV(hue, GraphHelpers.SATURATION, GraphHelpers.VALUE);
         }
     }
 }

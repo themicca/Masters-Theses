@@ -1,6 +1,6 @@
 ﻿namespace BachelorProject.Server.Models.DTO
 {
-    public class ResultGraphDto
+    public class GraphResultDto
     {
         public string[] NodeIds {  get; set; }
         public string[] EdgeIds { get; set; }

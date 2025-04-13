@@ -1,6 +1,8 @@
 import { Component, ElementRef, Input, SimpleChanges } from '@angular/core';
 import { v4 as uuidv4 } from 'uuid';
 import * as joint from 'jointjs';
+import { EDGE_COLOR_STROKE, LABEL_COLOR_BLACK } from '../../utils/constants';
+import { Utils } from '../../utils/utils';
 
 @Component({
   selector: 'app-edges-connection',
@@ -69,14 +71,14 @@ export class EdgesConnectionComponent {
     link.addTo(this.graph);
 
     if (this.directed) {
-      this.offsetParallelLinks(link, source, target);
+      Utils.offSetOppositeLinks(this.graph);
     }
   }
 
   public updateLinkStyle(link: joint.dia.Link): void {
     link.attr({
       line: {
-        stroke: '#2c3e50',
+        stroke: EDGE_COLOR_STROKE,
         strokeWidth: 3,
         strokeLinejoin: 'round',
         targetMarker: this.directed ? { type: 'path' } : { type: 'none' }
@@ -89,7 +91,7 @@ export class EdgesConnectionComponent {
         attrs: {
           text: {
             text: link.attr('weight').toString(),
-            fill: 'black'
+            fill: LABEL_COLOR_BLACK
           }
         }
       }]);
@@ -97,25 +99,6 @@ export class EdgesConnectionComponent {
     else {
       link.labels([]);
     }
-  }
-
-  private offsetParallelLinks(
-    link: joint.dia.Link,
-    source: joint.dia.Element,
-    target: joint.dia.Element
-  ): void {
-    const oppositeLink = this.graph.getLinks().find(l =>
-      l.getSourceElement() === target && l.getTargetElement() === source
-    );
-    if (!oppositeLink) return;
-    
-    const sourceCenter = source.getBBox().center();
-    const targetCenter = target.getBBox().center();
-    const midX = (sourceCenter.x + targetCenter.x) / 2;
-    const midY = (sourceCenter.y + targetCenter.y) / 2;
-    
-    link.vertices([{ x: midX, y: midY + 20 }]);
-    oppositeLink.vertices([{ x: midX, y: midY - 20 }]);
   }
 
   public enableEdgeCreationButton(sampleEdge: ElementRef): void {

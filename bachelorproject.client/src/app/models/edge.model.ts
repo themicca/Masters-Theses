@@ -1,4 +1,4 @@
-export interface GraphEdge {
+export interface Edge {
   id: string,
   sourceNodeId: string,
   targetNodeId: string,

@@ -7,6 +7,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { RenameNodesComponent } from '../rename-nodes/rename-nodes.component';
 import { GraphSubmitComponent } from '../graph-submit/graph-submit.component';
 import { TooltipComponent } from '../tooltip/tooltip.component';
+import { LABEL_COLOR_WHITE, MAX_NODES, NODE_COLOR_FILL, NODE_COLOR_STROKE, PAPER_BACKGROUND_COLOR, PAPER_HEIGHT } from '../../utils/constants';
+import { GraphErrorsService } from '../../services/graph-errors.service';
 
 @Component({
   selector: 'app-graph-editor',
@@ -41,7 +43,7 @@ export class GraphEditorComponent implements AfterViewInit {
   protected endNode: joint.dia.Element | null = null;
   private readonly defaultWeight = 1;
 
-  constructor() { }
+  constructor(private errorsService: GraphErrorsService) { }
 
   ngAfterViewInit(): void {
     setTimeout(() => {
@@ -60,10 +62,10 @@ export class GraphEditorComponent implements AfterViewInit {
       el: this.graphContainer.nativeElement,
       model: this.graph,
       width: '100%',
-      height: 650,
+      height: PAPER_HEIGHT,
       gridSize: 10,
       drawGrid: true,
-      background: { color: '#f8f9fa' },
+      background: { color: PAPER_BACKGROUND_COLOR },
       interactive: true
     });
   }
@@ -363,10 +365,8 @@ export class GraphEditorComponent implements AfterViewInit {
   toggleWeighted(): void {
     this.weighted = !this.weighted;
     console.log(`Graph is now ${this.weighted ? 'Weighted' : 'Unweighted'}`);
-    // Update each edge style to reflect the current weighted state.
     setTimeout(() => {
       this.graph.getLinks().forEach(link => {
-        // Assume updateLinkStyle now takes the weighted flag into account.
         this.edgesConnectionComponent.updateLinkStyle(link);
       });
     });
@@ -398,6 +398,13 @@ export class GraphEditorComponent implements AfterViewInit {
 
   onDrop(event: DragEvent): void {
     event.preventDefault();
+
+    if (this.graph.getElements().length >= MAX_NODES) {
+      const error = `Maximum node limit reached. Cannot add more than ${MAX_NODES} nodes.`;
+      this.errorsService.updateErrors(error);
+      return;
+    }
+
     const rect = this.graphContainer.nativeElement.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
@@ -412,8 +419,8 @@ export class GraphEditorComponent implements AfterViewInit {
     circle.position(x - this.nodeRadius / 2, y - this.nodeRadius / 2);
     circle.resize(this.nodeRadius, this.nodeRadius);
     circle.attr({
-      body: { fill: '#3498db', stroke: '#2980b9', strokeWidth: 2, cursor: 'pointer', transition: '0.3s' },
-      label: { text: label, fill: '#ffffff', fontSize: 14, cursor: 'default' }
+      body: { fill: NODE_COLOR_FILL, stroke: NODE_COLOR_STROKE, strokeWidth: 2, cursor: 'pointer', transition: '0.3s' },
+      label: { text: label, fill: LABEL_COLOR_WHITE, fontSize: 14, cursor: 'default' }
     });
     circle.attr('label/data-plain-text', label)
     circle.addTo(this.graph);

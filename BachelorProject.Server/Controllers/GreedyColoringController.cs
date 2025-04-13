@@ -14,7 +14,7 @@ namespace BachelorProject.Server.Controllers
         {
             try
             {
-                GraphStepDto result = await Task.Run(() => GreedyColoringAlgo.SolveGraph(request, true));
+                GraphStepsResultDto result = await Task.Run(() => GreedyColoringAlgo.SolveGraph(request, true));
                 return Ok(result);
             }
             catch (Exception ex)

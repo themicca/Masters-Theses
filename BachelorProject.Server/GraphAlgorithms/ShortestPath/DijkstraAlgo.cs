@@ -7,7 +7,7 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
     {
         static int nodesCount;
 
-        public static GraphStepDto SolveGraph(GraphDto graph, bool makeSnapshots)
+        public static GraphStepsResultDto SolveGraph(GraphDto graph, bool makeSnapshots)
         {
             string[] nodeIds = GraphDtoConvertor.ToNodeIdArray(graph);
             nodesCount = nodeIds.Length;
@@ -55,7 +55,7 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
                     continue;
 
                 visited[u] = true;
-                snapshot.ColorNode(u, GraphHelpers.ColorProcessing);
+                snapshot.ColorNode(u, GraphHelpers.COLOR_PROCESSING);
 
                 string currentNodeId = nodeIds[u];
 
@@ -69,20 +69,20 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
                         if (!visited[v] && dist[u] != int.MaxValue &&
                             dist[u] + neighbor.weight < dist[v])
                         {
-                            snapshot.ColorEdge(currentNodeId, neighbor.to, GraphHelpers.ColorProcessing);
+                            snapshot.ColorEdge(currentNodeId, neighbor.to, GraphHelpers.COLOR_PROCESSING);
                             int newDist = dist[u] + neighbor.weight;
                             dist[v] = newDist;
                             previous[v] = u;
 
                             currentTotalWeight = newDist;
                             snapshot.UpdateCurrentTotalWeight(currentTotalWeight);
-                            snapshot.ColorEdge(currentNodeId, neighbor.to, GraphHelpers.ColorProcessed);
+                            snapshot.ColorEdge(currentNodeId, neighbor.to, GraphHelpers.COLOR_PROCESSED);
 
                             priorityQueue.Enqueue(v, newDist);
                         }
                     }
                 }
-                snapshot.ColorNode(u, GraphHelpers.ColorProcessed);
+                snapshot.ColorNode(u, GraphHelpers.COLOR_PROCESSED);
             }
 
             int totalWeight = 0;
@@ -112,11 +112,11 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
 
                     int fromIndex = nodeIndexMap[fromId];
                     int toIndex = nodeIndexMap[toId];
-                    snapshot.ColorEdge(fromIndex, toIndex, GraphHelpers.ColorResult);
-                    snapshot.ColorNode(fromIndex, GraphHelpers.ColorResult);
+                    snapshot.ColorEdge(fromIndex, toIndex, GraphHelpers.COLOR_RESULT);
+                    snapshot.ColorNode(fromIndex, GraphHelpers.COLOR_RESULT);
                 }
                 int lastIndex = nodeIndexMap[path[path.Count - 1]];
-                snapshot.ColorNode(lastIndex, GraphHelpers.ColorResult);
+                snapshot.ColorNode(lastIndex, GraphHelpers.COLOR_RESULT);
             }
             else
             {
@@ -144,27 +144,27 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
                         continue;
                     if (previous[i] != -1)
                     {
-                        snapshot.ColorEdge(previous[i], i, GraphHelpers.ColorResult);
+                        snapshot.ColorEdge(previous[i], i, GraphHelpers.COLOR_RESULT);
                     }
                 }
                 for (int i = 0; i < nodesCount; i++)
                 {
-                    snapshot.ColorNode(i, GraphHelpers.ColorResult);
+                    snapshot.ColorNode(i, GraphHelpers.COLOR_RESULT);
                 }
             }
 
-            ResultGraphDto resultGraph = new ResultGraphDto
+            GraphResultDto resultGraph = new GraphResultDto
             {
                 NodeIds = path.ToArray(),
                 EdgeIds = resultEdgeIds.ToArray(),
                 TotalWeight = totalWeight,
-                AlgoType = GraphHelpers.AlgoTypes.Dijkstra
+                AlgoType = GraphHelpers.AlgoTypes.DIJKSTRA
             };
 
-            GraphStepDto stepDto = new GraphStepDto
+            GraphStepsResultDto stepDto = new GraphStepsResultDto
             {
                 Steps = snapshot.Steps,
-                ResultGraph = resultGraph
+                GraphResult = resultGraph
             };
 
             return stepDto;

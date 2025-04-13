@@ -1,9 +1,9 @@
 ﻿namespace BachelorProject.Server.Models.DTO
 {
-    public class GraphStepDto
+    public class GraphStepsResultDto
     {
         public List<Step> Steps { get; set; }
-        public ResultGraphDto ResultGraph { get; set; }
+        public GraphResultDto GraphResult { get; set; }
     }
 
     public class Step

@@ -85,7 +85,8 @@ export class TooltipComponent {
       - Directed graph
       - Start (source) node
       - Target (sink) node
-      - Non-negative edge capacities`
+      - Non-negative edge capacities
+      - A path from source to sink needs to exist.`
     );
 
     this.addElementTooltip(this.buttonFleury,

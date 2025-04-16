@@ -11,3 +11,5 @@ export const PAPER_HEIGHT = 650;
 
 export const MAX_NODES = 30;
 export const MAX_NODES_HELD_KARP = 12;
+
+export const API_URL = 'https://localhost:7130/api';

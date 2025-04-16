@@ -5,7 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { Node } from '../models/node.model';
 import { Edge } from '../models/edge.model';
 import { GraphStepsResult } from '../models/graph-steps-result.model';
-import { MAX_NODES, MAX_NODES_HELD_KARP } from '../utils/constants';
+import { API_URL, MAX_NODES, MAX_NODES_HELD_KARP } from '../utils/constants';
 
 @Injectable({
   providedIn: 'root'
@@ -47,37 +47,37 @@ export class GraphService {
   }
 
   runDijkstra(model: Graph): Observable<GraphStepsResult> {
-    return this.http.post<GraphStepsResult>('https://localhost:7130/api/Dijkstra', model);
+    return this.http.post<GraphStepsResult>(`${API_URL}/Dijkstra`, model);
   }
 
   runEdmondsKarp(model: Graph): Observable<GraphStepsResult> {
-    return this.http.post<GraphStepsResult>('https://localhost:7130/api/EdmondsKarp', model);
+    return this.http.post<GraphStepsResult>(`${API_URL}/EdmondsKarp`, model);
   }
 
   runHeldKarp(model: Graph): Observable<GraphStepsResult> {
-    return this.http.post<GraphStepsResult>('https://localhost:7130/api/HeldKarp', model);
+    return this.http.post<GraphStepsResult>(`${API_URL}/HeldKarp`, model);
   }
 
   runKruskal(model: Graph): Observable<GraphStepsResult> {
-    return this.http.post<GraphStepsResult>('https://localhost:7130/api/Kruskal', model);
+    return this.http.post<GraphStepsResult>(`${API_URL}/Kruskal`, model);
   }
 
   runFleury(model: Graph): Observable<GraphStepsResult> {
     model.src = this.src;
     model.eulerType = this.eulerType;
-    return this.http.post<GraphStepsResult>('https://localhost:7130/api/Fleury', model);
+    return this.http.post<GraphStepsResult>(`${API_URL}/Fleury`, model);
   }
 
   runGreedyMatching(model: Graph): Observable<GraphStepsResult> {
-    return this.http.post<GraphStepsResult>('https://localhost:7130/api/GreedyMatching', model);
+    return this.http.post<GraphStepsResult>(`${API_URL}/GreedyMatching`, model);
   }
 
   runGreedyColoring(model: Graph): Observable<GraphStepsResult> {
-    return this.http.post<GraphStepsResult>('https://localhost:7130/api/GreedyColoring', model);
+    return this.http.post<GraphStepsResult>(`${API_URL}/GreedyColoring`, model);
   }
 
   runWelshPowell(model: Graph): Observable<GraphStepsResult> {
-    return this.http.post<GraphStepsResult>('https://localhost:7130/api/WelshPowell', model);
+    return this.http.post<GraphStepsResult>(`${API_URL}/WelshPowell`, model);
   }
 
   validate(algo: string, graph: joint.dia.Graph, model: Graph): string[]

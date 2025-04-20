@@ -30,7 +30,7 @@ namespace BachelorProject.Server.Helpers
             foreach (var node in nodes)
             {
                 string nodeId = node.Id.ToString();
-                nodeColors[nodeId] = GraphHelpers.COLOR_BASE_NODE;
+                nodeColors[nodeId] = GraphHelpers.COLOR_UNPROCESSED_NODE;
             }
 
             foreach (var edge in edges)
@@ -42,7 +42,7 @@ namespace BachelorProject.Server.Helpers
                 if (!edgeLookup.ContainsKey(lookupKey))
                 {
                     edgeLookup[lookupKey] = edgeId;
-                    edgeColors[edgeId] = GraphHelpers.COLOR_BASE_EDGE;
+                    edgeColors[edgeId] = GraphHelpers.COLOR_UNPROCESSED_EDGE;
                     CurrentEdgeWeights[edgeId] = null;
                 }
                 if (!graph.IsDirected)

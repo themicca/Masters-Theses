@@ -78,7 +78,7 @@ namespace BachelorProject.Server.GraphAlgorithms.MinimumTree
                 }
                 else
                 {
-                    snapshot.ColorEdge(edge.From, edge.To, GraphHelpers.COLOR_DIRECTED);
+                    snapshot.ColorEdge(edge.From, edge.To, GraphHelpers.COLOR_DISCARDED);
                 }
             }
 

@@ -24,6 +24,8 @@ export class GraphEditorComponent implements AfterViewInit {
   @ViewChild('tooltipCheckbox', { static: false }) tooltipCheckbox!: ElementRef;
   @ViewChild('nodeContextMenu', { static: false }) nodeContextMenu!: ElementRef;
   @ViewChild('edgeContextMenu', { static: false }) edgeContextMenu!: ElementRef;
+  @ViewChild('startNodeButton', { static: false }) startNodeButton!: ElementRef;
+  @ViewChild('endNodeButton', { static: false }) endNodeButton!: ElementRef;
 
   @ViewChild(GraphSelectionComponent) selectionComponent!: GraphSelectionComponent;
   @ViewChild(EdgeWeightComponent) edgeWeightComponent!: EdgeWeightComponent;
@@ -218,16 +220,28 @@ export class GraphEditorComponent implements AfterViewInit {
   private showContextMenu(x: number, y: number, type: 'node' | 'edge'): void {
     this.hideAllContextMenus();
 
-    let menu: HTMLElement;
-    if (type === 'node') {
-      menu = this.nodeContextMenu.nativeElement;
-    } else {
-      menu = this.edgeContextMenu.nativeElement;
-    }
+    setTimeout(() => {
+      let menu: HTMLElement;
+      if (type === 'node') {
+        menu = this.nodeContextMenu.nativeElement;
 
-    menu.style.left = `${x}px`;
-    menu.style.top = `${y}px`;
-    menu.style.display = 'block';
+        const node = this.lastClickedElement as joint.dia.Element;
+
+        if (node) {
+          const isStart = this.startNode === node;
+          const isEnd = this.endNode === node;
+
+          this.startNodeButton.nativeElement.innerText = isStart ? 'Remove as Start Node' : 'Set as Start Node';
+          this.endNodeButton.nativeElement.innerText = isEnd ? 'Remove as End Node' : 'Set as End Node';
+        }
+      } else {
+        menu = this.edgeContextMenu.nativeElement;
+      }
+
+      menu.style.left = `${x}px`;
+      menu.style.top = `${y}px`;
+      menu.style.display = 'block';
+    });
   }
 
   private hideAllContextMenus(): void {

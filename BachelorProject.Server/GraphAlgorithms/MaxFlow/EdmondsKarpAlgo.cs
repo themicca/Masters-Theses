@@ -153,7 +153,7 @@ namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
                             foreach (var (uu, vv) in bfsEdges)
                             {
                                 if (!pathEdges.Contains((uu, vv)))
-                                    snapshot.ColorEdge(uu, vv, GraphHelpers.COLOR_DIRECTED);
+                                    snapshot.ColorEdge(uu, vv, GraphHelpers.COLOR_DISCARDED);
                             }
                             return true;
                         }

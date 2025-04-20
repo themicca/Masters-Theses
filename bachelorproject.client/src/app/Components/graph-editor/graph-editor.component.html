@@ -33,8 +33,8 @@
 </div>
 
 <div #nodeContextMenu class="context-menu">
-  <button (click)="setStartNode()">Set as Start Node</button>
-  <button (click)="setEndNode()">Set as End Node</button>
+  <button #startNodeButton (click)="setStartNode()">Set as Start Node</button>
+  <button #endNodeButton (click)="setEndNode()">Set as End Node</button>
   <button (click)="renameNode()">Rename Node</button>
   <button (click)="deleteSelected()">Delete Node(s)</button>
 </div>

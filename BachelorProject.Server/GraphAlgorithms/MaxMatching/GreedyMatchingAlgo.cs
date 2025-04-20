@@ -19,6 +19,7 @@ namespace BachelorProject.Server.GraphAlgorithms.MaxMatching
             List<string> matchingEdgeIds = new List<string>();
             Snapshots snapshot = new Snapshots(graph, makeSnapshots);
 
+            int pairs = 0;
             for (int i = 0; i < n; i++)
             {
                 if (match[i] != -1)
@@ -36,8 +37,12 @@ namespace BachelorProject.Server.GraphAlgorithms.MaxMatching
                         match[i] = j;
                         match[j] = i;
 
+
                         snapshot.ColorNode(i, GraphHelpers.COLOR_RESULT);
                         snapshot.ColorNode(j, GraphHelpers.COLOR_RESULT);
+
+                        pairs++;
+                        snapshot.UpdateCurrentTotalWeight(pairs);
                         snapshot.ColorEdge(i, j, GraphHelpers.COLOR_RESULT);
 
                         break;
@@ -59,7 +64,8 @@ namespace BachelorProject.Server.GraphAlgorithms.MaxMatching
             {
                 NodeIds = nodeIds,
                 EdgeIds = matchingEdgeIds.ToArray(),
-                AlgoType = GraphHelpers.AlgoTypes.GREEDY_MATCHING
+                AlgoType = GraphHelpers.AlgoTypes.GREEDY_MATCHING,
+                TotalWeight = pairs
             };
 
             GraphStepsResultDto resultDto = new GraphStepsResultDto

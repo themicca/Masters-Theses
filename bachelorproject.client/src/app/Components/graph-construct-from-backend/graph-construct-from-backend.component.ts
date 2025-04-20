@@ -4,7 +4,7 @@ import * as joint from 'jointjs';
 import { Graph } from '../../models/graph.model';
 import { Step } from '../../models/graph-steps-result.model';
 import { GraphResult } from '../../models/graph-result.model';
-import { EDGE_COLOR_STROKE, LABEL_COLOR_BLACK, LABEL_COLOR_WHITE, NODE_COLOR_FILL, NODE_COLOR_STROKE, PAPER_BACKGROUND_COLOR, PAPER_HEIGHT } from '../../utils/constants';
+import { DISCARDED_COLOR, EDGE_COLOR_STROKE, EDMONDS_KARP_NAME, GREEDY_COLORING_NAME, GREEDY_MATCHING_NAME, HELD_KARP_NAME, LABEL_COLOR_BLACK, LABEL_COLOR_WHITE, NODE_COLOR_FILL, NODE_COLOR_STROKE, PAPER_BACKGROUND_COLOR, PAPER_HEIGHT, PROCESSED_COLOR, PROCESSING_COLOR, RESULT_COLOR, WELSH_POWELL_NAME } from '../../utils/constants';
 import { Utils } from '../../utils/utils';
 
 @Component({
@@ -38,16 +38,75 @@ export class GraphConstructFromBackendComponent {
     steps.forEach((step, index) => {
       const stepWrapper = document.createElement('div');
       stepWrapper.classList.add('step-wrapper');
-      stepWrapper.innerHTML = `<h3>${algoType}${graph.eulerType ? " " + graph.eulerType : ""} Step ${index + 1}</h3>`;
+      
+      const headerDiv = document.createElement('div');
+      headerDiv.classList.add('step-header');
+      
+      const title = document.createElement('h3');
+      const formattedAlgoType = this.formatAlgoType(algoType);
+      title.innerText = `${formattedAlgoType}${graph.eulerType ? " " + graph.eulerType : ""} Step ${index + 1}`;
+      headerDiv.appendChild(title);
+
+      if (algoType != GREEDY_COLORING_NAME && algoType != WELSH_POWELL_NAME) {
+
+        const legendDiv = document.createElement('div');
+        legendDiv.classList.add('step-legend');
+
+        const legendItems = [
+          { label: 'Unprocessed Node', color: NODE_COLOR_FILL },
+          { label: 'Unprocessed Edge', color: EDGE_COLOR_STROKE },
+          { label: 'Processing', color: PROCESSING_COLOR },
+          { label: 'Processed', color: PROCESSED_COLOR },
+          { label: 'Discarded', color: DISCARDED_COLOR },
+          { label: 'Result', color: RESULT_COLOR }
+        ];
+
+        legendDiv.style.display = 'flex';
+        legendDiv.style.flexWrap = 'wrap';
+        legendDiv.style.fontSize = '0.9rem';
+        legendDiv.style.gap = '0.5rem';
+        legendDiv.style.marginLeft = '2.5%';
+        legendDiv.style.marginBottom = '0.15%';
+
+        legendItems.forEach(item => {
+          const entry = document.createElement('div');
+          entry.style.display = 'flex';
+          entry.style.alignItems = 'center';
+          entry.style.margin = '0';
+
+          const swatch = document.createElement('span');
+          swatch.style.display = 'inline-block';
+          swatch.style.width = '0.9rem';
+          swatch.style.height = '0.9rem';
+          swatch.style.marginRight = '2px';
+          swatch.style.border = '1px solid #666';
+          swatch.style.backgroundColor = item.color;
+
+          const text = document.createElement('span');
+          text.innerText = item.label;
+
+          entry.appendChild(swatch);
+          entry.appendChild(text);
+          legendDiv.appendChild(entry);
+        });
+
+        headerDiv.appendChild(legendDiv);
+      }
+
+      stepWrapper.appendChild(headerDiv);
+
       this.stepsContainer.nativeElement.appendChild(stepWrapper);
       
       if (step.currentTotalWeight != null) {
         let innerText = `Current Total Weight: ${step.currentTotalWeight}`;
-        if (algoType == "Edmonds-Karp") {
+        if (algoType == EDMONDS_KARP_NAME) {
           innerText = `Current Total Flow: ${step.currentTotalWeight}`;
         }
-        else if (algoType == "Welsh-Powell" || algoType == "Greedy Coloring") {
+        else if (algoType == WELSH_POWELL_NAME || algoType == GREEDY_COLORING_NAME) {
           innerText = `Current Used Colors: ${step.currentTotalWeight}`;
+        }
+        else if (algoType == GREEDY_MATCHING_NAME) {
+          innerText = `Current Pairs: ${step.currentTotalWeight}`;
         }
 
         const totalWeightDiv = document.createElement('div');
@@ -131,15 +190,19 @@ export class GraphConstructFromBackendComponent {
     this.resultTextDiv.nativeElement.innerHTML = '';
     this.resultContainer.nativeElement.innerHTML = '';
 
-    this.resultText.nativeElement.innerText = `${graphResult.algoType}${graph.eulerType ? " " + graph.eulerType : ""} Result`;
+    const formattedAlgoType = this.formatAlgoType(graphResult.algoType);
+    this.resultText.nativeElement.innerText = `${formattedAlgoType}${graph.eulerType ? " " + graph.eulerType : ""} Result`;
 
     if (graphResult.totalWeight != null) {
       let innerText = `Total Weight: ${graphResult.totalWeight}`;
-      if (graphResult.algoType == "Edmonds-Karp") {
+      if (graphResult.algoType == EDMONDS_KARP_NAME) {
         innerText = `Total Flow: ${graphResult.totalWeight}`;
       }
-      else if (graphResult.algoType == "Welsh-Powell" || graphResult.algoType == "Greedy Coloring") {
+      else if (graphResult.algoType == WELSH_POWELL_NAME || graphResult.algoType == GREEDY_COLORING_NAME) {
         innerText = `Used Colors: ${graphResult.totalWeight}`;
+      }
+      else if (graphResult.algoType == GREEDY_MATCHING_NAME) {
+        innerText = `Total Pairs: ${graphResult.totalWeight}`;
       }
 
       const totalWeightHeader = document.createElement('div');
@@ -174,13 +237,13 @@ export class GraphConstructFromBackendComponent {
       circle.position(nodeObj.x, nodeObj.y);
       circle.resize(80, 80);
       circle.attr({
-        body: { fill: graphResult.algoType == "Welsh-Powell" ? lastStep.nodeColors[nodeId] : NODE_COLOR_FILL, stroke: NODE_COLOR_STROKE, strokeWidth: 2 },
+        body: { fill: graphResult.algoType == WELSH_POWELL_NAME ? lastStep.nodeColors[nodeId] : NODE_COLOR_FILL, stroke: NODE_COLOR_STROKE, strokeWidth: 2 },
         label: { text: nodeObj.label, fill: LABEL_COLOR_WHITE, fontSize: 14 }
       });
       circle.addTo(resultGraph);
       nodeMap.set(nodeObj.id, circle);
 
-      if (graphResult.algoType === "Held-Karp") {
+      if (graphResult.algoType === HELD_KARP_NAME) {
         const traversalIndex = graphResult.nodeIds.indexOf(nodeId);
         let orderNumber = null;
 
@@ -232,7 +295,7 @@ export class GraphConstructFromBackendComponent {
       }
       link.attr({
         line: {
-          stroke: graphResult.algoType == "Greedy Coloring" ? lastStep.edgeColors[edgeId] : EDGE_COLOR_STROKE,
+          stroke: graphResult.algoType == GREEDY_COLORING_NAME ? lastStep.edgeColors[edgeId] : EDGE_COLOR_STROKE,
           strokeWidth: 3,
           targetMarker: graph.isDirected ? { type: 'path' } : { type: 'none' }
         }
@@ -241,5 +304,15 @@ export class GraphConstructFromBackendComponent {
     });
 
     Utils.offSetOppositeLinks(resultGraph);
+  }
+
+  private formatAlgoType(algoType: string): string {
+    const dashTypes = [EDMONDS_KARP_NAME, HELD_KARP_NAME, WELSH_POWELL_NAME];
+
+    if (dashTypes.includes(algoType)) {
+      return algoType.replace(/([a-z])([A-Z])/g, '$1-$2');
+    }
+
+    return algoType.replace(/([a-z])([A-Z])/g, '$1 $2');
   }
 }

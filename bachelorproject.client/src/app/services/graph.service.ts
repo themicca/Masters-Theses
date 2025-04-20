@@ -5,7 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { Node } from '../models/node.model';
 import { Edge } from '../models/edge.model';
 import { GraphStepsResult } from '../models/graph-steps-result.model';
-import { API_URL, MAX_NODES, MAX_NODES_HELD_KARP } from '../utils/constants';
+import { API_URL, DIJKSTRA_NAME, EDMONDS_KARP_NAME, FLEURY_NAME, GREEDY_COLORING_NAME, GREEDY_MATCHING_NAME, HELD_KARP_NAME, KRUSKAL_NAME, MAX_NODES_HELD_KARP, WELSH_POWELL_NAME } from '../utils/constants';
 
 @Injectable({
   providedIn: 'root'
@@ -25,21 +25,21 @@ export class GraphService {
 
   runAlgo(algo: string, model: Graph): Observable<GraphStepsResult> {
     switch (algo) {
-      case "Dijkstra":
+      case DIJKSTRA_NAME:
         return this.runDijkstra(model);
-      case "Kruskal":
+      case KRUSKAL_NAME:
         return this.runKruskal(model);
-      case "Edmonds-Karp":
+      case EDMONDS_KARP_NAME:
         return this.runEdmondsKarp(model);
-      case "Held-Karp":
+      case HELD_KARP_NAME:
         return this.runHeldKarp(model);
-      case "Fleury":
+      case FLEURY_NAME:
         return this.runFleury(model);
-      case "Greedy Matching":
+      case GREEDY_MATCHING_NAME:
         return this.runGreedyMatching(model);
-      case "Greedy Coloring":
+      case GREEDY_COLORING_NAME:
         return this.runGreedyColoring(model);
-      case "Welsh-Powell":
+      case WELSH_POWELL_NAME:
         return this.runWelshPowell(model);
       default:
         return throwError(() => new Error(`Unknown algorithm: ${algo}`));
@@ -47,37 +47,37 @@ export class GraphService {
   }
 
   runDijkstra(model: Graph): Observable<GraphStepsResult> {
-    return this.http.post<GraphStepsResult>(`${API_URL}/Dijkstra`, model);
+    return this.http.post<GraphStepsResult>(`${API_URL}/${DIJKSTRA_NAME}`, model);
   }
 
   runEdmondsKarp(model: Graph): Observable<GraphStepsResult> {
-    return this.http.post<GraphStepsResult>(`${API_URL}/EdmondsKarp`, model);
+    return this.http.post<GraphStepsResult>(`${API_URL}/${EDMONDS_KARP_NAME}`, model);
   }
 
   runHeldKarp(model: Graph): Observable<GraphStepsResult> {
-    return this.http.post<GraphStepsResult>(`${API_URL}/HeldKarp`, model);
+    return this.http.post<GraphStepsResult>(`${API_URL}/${HELD_KARP_NAME}`, model);
   }
 
   runKruskal(model: Graph): Observable<GraphStepsResult> {
-    return this.http.post<GraphStepsResult>(`${API_URL}/Kruskal`, model);
+    return this.http.post<GraphStepsResult>(`${API_URL}/${KRUSKAL_NAME}`, model);
   }
 
   runFleury(model: Graph): Observable<GraphStepsResult> {
     model.src = this.src;
     model.eulerType = this.eulerType;
-    return this.http.post<GraphStepsResult>(`${API_URL}/Fleury`, model);
+    return this.http.post<GraphStepsResult>(`${API_URL}/${FLEURY_NAME}`, model);
   }
 
   runGreedyMatching(model: Graph): Observable<GraphStepsResult> {
-    return this.http.post<GraphStepsResult>(`${API_URL}/GreedyMatching`, model);
+    return this.http.post<GraphStepsResult>(`${API_URL}/${GREEDY_MATCHING_NAME}`, model);
   }
 
   runGreedyColoring(model: Graph): Observable<GraphStepsResult> {
-    return this.http.post<GraphStepsResult>(`${API_URL}/GreedyColoring`, model);
+    return this.http.post<GraphStepsResult>(`${API_URL}/${GREEDY_COLORING_NAME}`, model);
   }
 
   runWelshPowell(model: Graph): Observable<GraphStepsResult> {
-    return this.http.post<GraphStepsResult>(`${API_URL}/WelshPowell`, model);
+    return this.http.post<GraphStepsResult>(`${API_URL}/${WELSH_POWELL_NAME}`, model);
   }
 
   validate(algo: string, graph: joint.dia.Graph, model: Graph): string[]
@@ -92,28 +92,28 @@ export class GraphService {
     this.errors = [];
 
     switch (algo) {
-      case "Dijkstra":
+      case DIJKSTRA_NAME:
         this.validateDijkstra();
         break;
-      case "Kruskal":
+      case KRUSKAL_NAME:
         this.validateKruskal();
         break;
-      case "Edmonds-Karp":
+      case EDMONDS_KARP_NAME:
         this.validateEdmondsKarp();
         break;
-      case "Held-Karp":
+      case HELD_KARP_NAME:
         this.validateHeldKarp();
         break;
-      case "Fleury":
+      case FLEURY_NAME:
         this.validateFleury();
         break;
-      case "Greedy Matching":
+      case GREEDY_MATCHING_NAME:
         this.validateGreedyMatching();
         break;
-      case "Greedy Coloring":
+      case GREEDY_COLORING_NAME:
         this.validateGreedyColoring();
         break;
-      case "Welsh-Powell":
+      case WELSH_POWELL_NAME:
         this.validateWelshPowell();
         break;
       default:
@@ -134,6 +134,8 @@ export class GraphService {
       }
       return false;
     });
+    if (!this.isStartToEndReachable())
+      this.errors.push("End node is set, but no path from start to end exists.");
   }
 
   validateHeldKarp() {
@@ -186,7 +188,8 @@ export class GraphService {
       }
       return false;
     });
-    this.isSourceToSinkReachable();
+    if (!this.isStartToEndReachable())
+      this.errors.push("No path from source to sink exists.");
   }
 
   validateFleury() {
@@ -386,9 +389,9 @@ export class GraphService {
       this.errors.push("Connected graph required.");
   }
 
-  public isSourceToSinkReachable() {
+  public isStartToEndReachable(): boolean {
     if (!this.src || !this.target) {
-      return;
+      return true;
     }
 
     const visited = new Set<string>();
@@ -409,7 +412,7 @@ export class GraphService {
     while (queue.length > 0) {
       const current = queue.shift()!;
       if (current === this.target) {
-        return;
+        return true;
       }
 
       for (const neighbor of adjacencyMap.get(current) || []) {
@@ -420,6 +423,6 @@ export class GraphService {
       }
     }
 
-    this.errors.push("No path from source to sink exists.");
+    return false;
   }
 }

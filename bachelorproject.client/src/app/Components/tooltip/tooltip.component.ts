@@ -65,15 +65,18 @@ export class TooltipComponent {
     this.addElementTooltip(this.tooltipCheckbox, 'Enable/Disable tooltips.');
 
     this.addElementTooltip(this.buttonDijkstra,
-      `Finds the shortest path from a start node to all other nodes in a graph.
+      `Finds the shortest path from the start node to all other connected nodes in the graph.
       Requires:
       - Start node
       - Non-negative weights on edges
-      - (Optinal) Setting an end node finds the shortest path to the end node`
+      - (Optinal) Setting an end node finds the shortest path to that node
+      - If end node is set, a path from start to end must exist
+
+      The algorithm automatically discards all unreachable nodes, so the graph does not need to be connected.`
     );
 
     this.addElementTooltip(this.buttonKruskal,
-      `Builds a Minimum Spanning Tree (MST) by adding the lowest-weight edges without forming cycles.
+      `Builds a Minimum Spanning Tree (MST) by adding the lowest-weight edges without forming cycles. If the graph is not connected, it finds the Minimum Spanning Forest (MSF).
       Requires:
       - Undirected graph
       - Weighted graph`
@@ -86,7 +89,7 @@ export class TooltipComponent {
       - Start (source) node
       - Target (sink) node
       - Non-negative edge capacities
-      - A path from source to sink needs to exist.`
+      - A path from source to sink must exist.`
     );
 
     this.addElementTooltip(this.buttonFleury,

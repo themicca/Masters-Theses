@@ -5,12 +5,12 @@
         public const int MAX_WEIGHT = int.MaxValue;
         public const int MIN_WEIGHT = int.MinValue;
 
-        public const string COLOR_BASE_NODE = "#3498db";
-        public const string COLOR_BASE_EDGE = "black";
+        public const string COLOR_UNPROCESSED_NODE = "#3498db";
+        public const string COLOR_UNPROCESSED_EDGE = "black";
         public const string COLOR_PROCESSING = "orange";
         public const string COLOR_PROCESSED = "blue";
+        public const string COLOR_DISCARDED = "red";
         public const string COLOR_RESULT = "green";
-        public const string COLOR_DIRECTED = "red";
 
         public const double SATURATION = 0.8;
         public const double VALUE = 0.8;
@@ -19,12 +19,12 @@
         {
             public const string DIJKSTRA = "Dijkstra";
             public const string KRUSKAL = "Kruskal";
-            public const string FELURY = "Fleury";
-            public const string EDMONDS_KARP = "Edmonds-Karp";
-            public const string HELD_KARP = "Held-Karp";
-            public const string GREEDY_MATCHING = "Greedy Matching";
-            public const string GREEDY_COLORING = "Greedy Coloring";
-            public const string WELSH_POWELL = "Welsh-Powell";
+            public const string FLEURY = "Fleury";
+            public const string EDMONDS_KARP = "EdmondsKarp";
+            public const string HELD_KARP = "HeldKarp";
+            public const string GREEDY_MATCHING = "GreedyMatching";
+            public const string GREEDY_COLORING = "GreedyColoring";
+            public const string WELSH_POWELL = "WelshPowell";
         }
 
         public static string ColorFromHSV(double hue, double saturation, double value)

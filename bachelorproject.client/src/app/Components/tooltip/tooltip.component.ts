@@ -96,6 +96,7 @@ export class TooltipComponent {
       `Finds an Eulerian path or circuit in a graph by carefully removing edges.
       Requires:
       - Undirected graph
+      - Unweighted graph
       - Connected graph
       - Graph must be Eulerian or semi-Eulerian (0 or 2 odd-degree nodes)
       - Eulerian condition is checked before running the algorithm`
@@ -115,19 +116,22 @@ export class TooltipComponent {
     this.addElementTooltip(this.buttonGreedyMatching,
       `Finds a matching in a graph by repeatedly selecting the smallest available edge.
       Requires:
-      - Undirected graph`
+      - Undirected graph
+      - Unweighted graph`
     );
 
     this.addElementTooltip(this.buttonGreedyColoring,
       `Colors nodes of a graph so that no two adjacent nodes have the same color.
       Requires:
-      - Undirected graph`
+      - Undirected graph
+      - Unweighted graph`
     );
 
     this.addElementTooltip(this.buttonWelshPowell,
       `Optimizes node coloring by ordering vertices by degree.
       Requires:
-      - Undirected graph`
+      - Undirected graph
+      - Unweighted graph`
     );
   }
 

@@ -17,6 +17,7 @@ export class GraphService {
   private nodes!: Node[];
   private edges!: Edge[];
   private directed!: boolean;
+  private weighted!: boolean;
   private eulerType: string = "";
   
   errors: string[] = [];
@@ -88,6 +89,7 @@ export class GraphService {
     this.nodes = model.nodes;
     this.edges = model.edges;
     this.directed = model.isDirected;
+    this.weighted = model.isWeighted;
 
     this.errors = [];
 
@@ -198,6 +200,9 @@ export class GraphService {
     if (this.directed) {
       this.errors.push('Requires undirected graph.');
     }
+    if (this.weighted) {
+      this.errors.push('Requires unweighted graph.');
+    }
 
     this.isGraphConnected();
     this.eulerGraphConditionsCheck();
@@ -207,17 +212,26 @@ export class GraphService {
     if (this.directed) {
       this.errors.push('Requires undirected graph.');
     }
+    if (this.weighted) {
+      this.errors.push('Requires unweighted graph.');
+    }
   }
 
   validateGreedyColoring() {
     if (this.directed) {
       this.errors.push('Requires undirected graph.');
     }
+    if (this.weighted) {
+      this.errors.push('Requires unweighted graph.');
+    }
   }
 
   validateWelshPowell() {
     if (this.directed) {
       this.errors.push('Requires undirected graph.');
+    }
+    if (this.weighted) {
+      this.errors.push('Requires unweighted graph.');
     }
   }
 

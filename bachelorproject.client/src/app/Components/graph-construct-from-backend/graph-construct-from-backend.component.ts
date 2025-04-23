@@ -4,7 +4,7 @@ import * as joint from 'jointjs';
 import { Graph } from '../../models/graph.model';
 import { Step } from '../../models/graph-steps-result.model';
 import { GraphResult } from '../../models/graph-result.model';
-import { DISCARDED_COLOR, EDGE_COLOR_STROKE, EDMONDS_KARP_NAME, GREEDY_COLORING_NAME, GREEDY_MATCHING_NAME, HELD_KARP_NAME, LABEL_COLOR_BLACK, LABEL_COLOR_WHITE, NODE_COLOR_FILL, NODE_COLOR_STROKE, PAPER_BACKGROUND_COLOR, PAPER_HEIGHT, PROCESSED_COLOR, PROCESSING_COLOR, RESULT_COLOR, WELSH_POWELL_NAME } from '../../utils/constants';
+import { DISCARDED_COLOR, EDGE_COLOR_STROKE, EDMONDS_KARP_NAME, FLEURY_NAME, GREEDY_COLORING_NAME, GREEDY_MATCHING_NAME, HELD_KARP_NAME, LABEL_COLOR_BLACK, LABEL_COLOR_WHITE, NODE_COLOR_FILL, NODE_COLOR_STROKE, PAPER_BACKGROUND_COLOR, PAPER_HEIGHT, PROCESSED_COLOR, PROCESSING_COLOR, RESULT_COLOR, WELSH_POWELL_NAME } from '../../utils/constants';
 import { Utils } from '../../utils/utils';
 
 @Component({
@@ -281,11 +281,14 @@ export class GraphConstructFromBackendComponent {
       if (graphResult.edgeResultWeights && graphResult.edgeResultWeights[edgeObj.id] != null) {
         labelText = `${graphResult.edgeResultWeights[edgeObj.id]}/${originalWeight}`;
       }
+      if (graphResult.algoType === FLEURY_NAME) {
+        labelText = (graphResult.edgeIds.indexOf(edgeId) + 1).toString();
+      }
 
       const link = new joint.shapes.standard.Link();
       link.source(sourceEl);
       link.target(targetEl);
-      if (graph.isWeighted) {
+      if (graph.isWeighted || graphResult.algoType === FLEURY_NAME) {
         link.labels([{
           position: 0.5,
           attrs: {

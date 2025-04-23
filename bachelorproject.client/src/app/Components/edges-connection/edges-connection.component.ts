@@ -48,6 +48,12 @@ export class EdgesConnectionComponent {
         this.exitEdgeCreationMode();
       }
     });
+
+    document.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        this.exitEdgeCreationMode();
+      }
+    });
   }
 
   private doesLinkExist(source: joint.dia.Element, target: joint.dia.Element): boolean {

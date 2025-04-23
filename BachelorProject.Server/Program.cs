@@ -1,4 +1,4 @@
-namespace BachelorProject.Server
+﻿namespace BachelorProject.Server
 {
     public class Program
     {

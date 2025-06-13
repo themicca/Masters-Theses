@@ -1,9 +1,10 @@
 ﻿using BachelorProject.Server.Helpers;
+using BachelorProject.Server.Interfaces;
 using BachelorProject.Server.Models.DTO;
 
 namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
 {
-    public static class DijkstraAlgo
+    public class DijkstraAlgo : AlgoBase
     {
         static int nodesCount;
 

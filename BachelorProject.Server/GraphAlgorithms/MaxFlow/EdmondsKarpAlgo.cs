@@ -1,9 +1,10 @@
 ﻿using BachelorProject.Server.Helpers;
+using BachelorProject.Server.Interfaces;
 using BachelorProject.Server.Models.DTO;
 
 namespace BachelorProject.Server.GraphAlgorithms.ShortestPath
 {
-    public class EdmondsKarpAlgo
+    public class EdmondsKarpAlgo : AlgoBase
     {
         public static GraphStepsResultDto SolveGraph(GraphDto graph, bool makeSnapshots)
         {

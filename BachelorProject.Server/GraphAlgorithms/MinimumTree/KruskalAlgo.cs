@@ -1,10 +1,11 @@
 ﻿using Azure.Core;
 using BachelorProject.Server.Helpers;
+using BachelorProject.Server.Interfaces;
 using BachelorProject.Server.Models.DTO;
 
 namespace BachelorProject.Server.GraphAlgorithms.MinimumTree
 {
-    public class KruskalAlgo
+    public class KruskalAlgo : AlgoBase
     {
         private class Edge
         {

@@ -1,10 +1,11 @@
 ﻿using BachelorProject.Server.GraphAlgorithms.ShortestPath;
 using BachelorProject.Server.Helpers;
+using BachelorProject.Server.Interfaces;
 using BachelorProject.Server.Models.DTO;
 
 namespace BachelorProject.Server.GraphAlgorithms.HamiltonianCycle
 {
-    public class HeldKarpAlgo
+    public class HeldKarpAlgo : AlgoBase
     {
         public static GraphStepsResultDto SolveGraph(GraphDto graph, bool makeSnapshots)
         {

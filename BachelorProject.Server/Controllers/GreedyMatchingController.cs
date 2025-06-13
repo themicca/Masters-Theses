@@ -1,4 +1,5 @@
 ﻿using BachelorProject.Server.GraphAlgorithms.MaxMatching;
+using BachelorProject.Server.Interfaces;
 using BachelorProject.Server.Models.DTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,7 @@ namespace BachelorProject.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class GreedyMatchingController : ControllerBase
+    public class GreedyMatchingController : ControllerBase, AlgoController
     {
         [HttpPost]
         public async Task<IActionResult> RunAlgo(GraphDto request)

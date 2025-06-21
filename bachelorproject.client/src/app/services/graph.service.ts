@@ -129,6 +129,9 @@ export class GraphService {
     if (!this.src) {
       this.errors.push('Start node is not set.');
     }
+    if (!this.weighted) {
+      this.errors.push('Requires weighted graph.');
+    }
     this.graph!.getLinks().some(link => {
       if (link.attr('weight') < 1) {
         this.errors.push('There are negative edges.');
@@ -143,6 +146,9 @@ export class GraphService {
   validateHeldKarp() {
     if (!this.src) {
       this.errors.push('Start node is not set.');
+    }
+    if (!this.weighted) {
+      this.errors.push('Requires weighted graph.');
     }
     this.graph!.getLinks().some(link => {
       if (link.attr('weight') < 1) {
@@ -171,6 +177,9 @@ export class GraphService {
     if (this.directed) {
       this.errors.push('Requires undirected graph.');
     }
+    if (!this.weighted) {
+      this.errors.push('Requires weighted graph.');
+    }
   }
 
   validateEdmondsKarp() {
@@ -182,6 +191,9 @@ export class GraphService {
     }
     if (!this.directed) {
       this.errors.push('Requires directed graph.');
+    }
+    if (!this.weighted) {
+      this.errors.push('Requires weighted graph.');
     }
     this.graph!.getLinks().some(link => {
       if (link.attr('weight') < 1) {
